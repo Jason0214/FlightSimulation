@@ -1,0 +1,14 @@
+# log
+*.log
+*.tlog
+
+# for debug 
+*.pdb
+*.idb
+
+# for model
+*.obj
+*.png
+*.jpg
+*.mtl
+*.xfr
