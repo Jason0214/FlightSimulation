@@ -54,30 +54,31 @@ vector<Texture> Model::LoadMeshMaterial(aiMaterial* material, aiTextureType type
 }
 
 void Model::LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, string & directory) {
-	mesh.init(raw_mesh->mNumVertices, (raw_mesh->mNumFaces)*3);
+	mesh.init(0, raw_mesh->mNumVertices, (raw_mesh->mNumFaces)*3); //level 0 is the original model
 //	cout << "v num:" << mesh.v_num << endl;
+	Vertex* vertices_ptr = mesh.GetVertexPtr(0);
+	GLuint* indices_ptr = mesh.GetIndexPtr(0);
 	for (unsigned int i = 0; i < raw_mesh->mNumVertices; i++) {
-		Vertex* ptr = &(mesh.vertices[i]);
-		ptr->position_x = raw_mesh->mVertices[i].x;
-		ptr->position_y = raw_mesh->mVertices[i].y;
-		ptr->position_z = raw_mesh->mVertices[i].z;
-		ptr->normal_x = raw_mesh->mNormals[i].x;
-		ptr->normal_y = raw_mesh->mNormals[i].y;
-		ptr->normal_z = raw_mesh->mNormals[i].z;
+		vertices_ptr[i].position_x = raw_mesh->mVertices[i].x;
+		vertices_ptr[i].position_y = raw_mesh->mVertices[i].y;
+		vertices_ptr[i].position_z = raw_mesh->mVertices[i].z;
+		vertices_ptr[i].normal_x = raw_mesh->mNormals[i].x;
+		vertices_ptr[i].normal_y = raw_mesh->mNormals[i].y;
+		vertices_ptr[i].normal_z = raw_mesh->mNormals[i].z;
 		if (raw_mesh->mTextureCoords[0]) {
-			ptr->texture_x = raw_mesh->mTextureCoords[0][i].x;
-			ptr->texture_y = raw_mesh->mTextureCoords[0][i].y;
+			vertices_ptr[i].texture_x = raw_mesh->mTextureCoords[0][i].x;
+			vertices_ptr[i].texture_y = raw_mesh->mTextureCoords[0][i].y;
 		}
 		else {
-			ptr->texture_x = 0.0f;
-			ptr->texture_x = 0.0f;
+			vertices_ptr[i].texture_x = 0.0f;
+			vertices_ptr[i].texture_x = 0.0f;
 		}
 	}
 	// store index for drawing order of vertices
 	for (unsigned int i = 0; i < raw_mesh->mNumFaces; i++)
 	{
 		aiFace face = raw_mesh->mFaces[i];
-		memcpy(&mesh.indices[i * 3], face.mIndices, 3 * sizeof(GLuint));
+		memcpy(&(indices_ptr[3*i]), face.mIndices, 3 * sizeof(GLuint));
 	}
 	// texture
 	if (raw_mesh->mMaterialIndex >= 0)

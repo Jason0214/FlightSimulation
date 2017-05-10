@@ -29,10 +29,9 @@ public:
 	Shader shader;
 protected:
 	void LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, std::string & directory);
-	std::vector<Texture> LoadMeshMaterial(aiMaterial* mat, aiTextureType type, std::string & directory);
+	std::vector<Texture> LoadMeshMaterial(aiMaterial* material, aiTextureType type, std::string & directory);
 	Mesh* meshes;
 	unsigned int mesh_num;
 	std::vector<Texture> all_textures;
 	GLenum model_type;
 };
-
