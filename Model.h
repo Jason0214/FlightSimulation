@@ -20,12 +20,15 @@
 #include "DepthMap.h"
 #include "Camera.h"
 
+class DepthMap;
+
 class Model {
 public:
 	Model(GLenum type):model_type(type),mesh_num(0),meshes(NULL){}
 	virtual ~Model(){ delete[] meshes;}
 	virtual void Load(std::string path);
-	virtual void Draw(vec3 & position, vec3 & pivot, float angle, const LightSrc & sun, const DepthMap & depth_buffer) const;
+	virtual void Render(vec3 & position, vec3 & pivot, float angle, const LightSrc & light, const DepthMap & depth_buffer) const;
+	virtual void RenderFrame(vec3 & position, vec3 & pivot, float angle, const Shader & frame_shader) const;
 	Shader shader;
 protected:
 	void LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, std::string & directory);

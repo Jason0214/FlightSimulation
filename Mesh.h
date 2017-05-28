@@ -38,7 +38,8 @@ public:
 	~Mesh();
 	void init(unsigned int level, unsigned int v_num, unsigned int i_num);
 	void deploy(GLenum model_type,unsigned int level=0);
-	void draw(GLuint program,unsigned int level=0) const;
+	void render(GLuint program,unsigned int level=0) const;
+	void render_frame(GLuint program)const;
 	Vertex* GetVertexPtr(unsigned int level) {
 		return this->data[level].vertices;
 	}

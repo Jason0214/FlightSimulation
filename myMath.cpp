@@ -10,45 +10,48 @@ float aTan(float theta) {
 	return tan((theta)*RAD_PER_DEGREE);
 }
 
-static inline void vec_subtract(float* v_data,const float* v1_data,const float* v2_data, int len) {
+static inline void _subtract(float* des,const float* src1,const float* src2, int len) {
 	for (int i = 0; i < len; i++) {
-		v_data[i] = v1_data[i] - v2_data[i];
+		des[i] = src1[i] - src2[i];
 	}
 }
 
-static inline void vec_add(float* v_data,const float* v1_data,const float* v2_data, int len) {
+static inline void _add(float* des,const float* src1,const float* src2, int len) {
 	for (int i = 0; i < len; i++) {
-		v_data[i] = v1_data[i] + v2_data[i];
+		des[i] = src1[i] + src2[i];
 	}
 }
 
-static inline void vec_multi(float* v_data,const float* v1_data, float k, int len) {
+static inline void _assign(float* des,const float* src, int len) {
+	memcpy(des,src,sizeof(float)*len);
+}
+
+static inline void vec_multi(float* des,const float* src, float k, int len) {
 	for (int i = 0; i < len; i++) {
-		v_data[i] = v1_data[i] * k;
+		des[i] = src[i] * k;
 	}
 }
 
-static inline void vec_assign(float* v_data,const float* v1_data, int len) {
-	for (int i = 0; i < len; i++) {
-		v_data[i] = v1_data[i];
-	}
-}
-
-static inline float vec_dot(const float* v1_data,const float* v2_data, int len) {
+static inline float vec_dot(const float* src1,const float* src2, int len) {
 	float ret = 0;
 	for (int i = 0; i < len; i++) {
-		ret += v1_data[i] * v2_data[i];
+		ret += src1[i] * src2[i];
 	}
 	return ret;
 }
 
-static inline void vec_normalize(float* v_data,int len){
-	float module = 0;
+static inline float vec_module(const float* src, int len){
+	float ret = 0;
 	for (int i = 0; i < len; i++) {
-		module += (v_data[i] * v_data[i]);
+		ret += (src[i] * src[i]);
 	}
+	return sqrt(ret);
+}
+
+static inline void vec_normalize(float* des,const float* src,int len){
+	float module = vec_module(src, len);
 	for (int i = 0; i < len; i++) {
-		v_data[i] /= module;
+		des[i] = src[i] / module;
 	}
 }
 
@@ -57,22 +60,22 @@ vec2 vec2::operator* (float k) const {
 	vec_multi(ret.data(), this->data(), k, 2);
 	return ret;
 }
-vec2 vec2::operator+ (vec2 v) const {
+vec2 vec2::operator+ (const vec2 & v) const {
 	vec2 ret;
-	vec_add(ret.data(), this->data(), v.data(), 2);
+	_add(ret.data(), this->data(), v.data(), 2);
 	return ret;
 }
-vec2 vec2::operator- (vec2 v) const {
+vec2 vec2::operator- (const vec2 & v) const {
 	vec2 ret;
-	vec_subtract(ret.data(), this->data(), v.data(), 2);
+	_subtract(ret.data(), this->data(), v.data(), 2);
 	return ret;
 }
-float vec2::operator* (vec2 v) const {
+float vec2::operator* (const vec2 & v) const {
 	return vec_dot(this->data(), v.data(), 2);
 }
 vec2 & vec2::operator= (vec2 & v) {
 	if (this != &v) {
-		vec_assign(this->data(), v.data(), 2);
+		_assign(this->data(), v.data(), 2);
 	}
 	return *this;
 }
@@ -82,22 +85,22 @@ vec3 vec3::operator* (float k) const {
 	vec_multi(ret.data(), this->data(), k, 3);
 	return ret;
 }
-vec3 vec3::operator+ (vec3 v) const {
+vec3 vec3::operator+ (const vec3 & v) const {
 	vec3 ret;
-	vec_add(ret.data(), this->data(), v.data(), 3);
+	_add(ret.data(), this->data(), v.data(), 3);
 	return ret;
 }
-vec3 vec3::operator- (vec3 v) const {
+vec3 vec3::operator- (const vec3 & v) const {
 	vec3 ret;
-	vec_subtract(ret.data(), this->data(), v.data(), 3);
+	_subtract(ret.data(), this->data(), v.data(), 3);
 	return ret;
 }
-float vec3::operator* (vec3 v) const {
+float vec3::operator* (const vec3 & v) const {
 	return vec_dot(this->data(), v.data(), 3);
 }
-vec3 & vec3::operator= (vec3 & v) {
+vec3 & vec3::operator= (const vec3 & v) {
 	if (this != &v) {
-		vec_assign(this->data(), v.data(), 3);
+		_assign(this->data(), v.data(), 3);
 	}
 	return *this;
 }
@@ -107,44 +110,85 @@ vec4 vec4::operator* (float k) const {
 	vec_multi(ret.data(), this->data(), k, 4);
 	return ret;
 }
-vec4 vec4::operator+ (vec4 v) const {
+vec4 vec4::operator+ (const vec4 & v) const {
 	vec4 ret;
-	vec_add(ret.data(), this->data(), v.data(), 4);
+	_add(ret.data(), this->data(), v.data(), 4);
 	return ret;
 }
-vec4 vec4::operator- (vec4 v) const {
+vec4 vec4::operator- (const vec4 & v) const {
 	vec4 ret;
-	vec_subtract(ret.data(), this->data(), v.data(), 4);
+	_subtract(ret.data(), this->data(), v.data(), 4);
 	return ret;
 }
-float vec4::operator* (vec4 v) const {
+float vec4::operator* (const vec4 & v) const {
 	return vec_dot(this->data(), v.data(), 4);
 }
-vec4 & vec4::operator= (vec4 & v) {
+vec4 & vec4::operator= (const vec4 & v) {
 	if (this != &v) {
-		vec_assign(this->data(), v.data(), 4);
+		_assign(this->data(), v.data(), 4);
 	}
 	return *this;
 }
 
 
-void normalize(vec2 v){
-	vec_normalize(v.data(),2);
+vec2 normalize(const vec2 & v){
+	vec2 ret;
+	vec_normalize(ret.data(),v.data(),2);
+	return ret;
 }
 
-void normalize(vec3 v){
-	vec_normalize(v.data(),3);
+vec3 normalize(const vec3 & v){
+	vec3 ret;
+	vec_normalize(ret.data(),v.data(),3);
+	return ret;
 }
 
-void normalize(vec4 v){
-	vec_normalize(v.data(),4);
+vec4 normalize(const vec4 & v){
+	vec4 ret;
+	vec_normalize(ret.data(),v.data(),4);
+	return ret;
 }
 
 
-vec3 cross(const vec3 v1, const vec3 v2){
+vec3 cross(const vec3 & v1, const vec3 & v2){
 	vec3 ret;
 	ret[0] = v1[1] * v2[2] - v1[2] * v1[1];
 	ret[1] = v1[2] * v2[0] - v1[0] * v2[2];
 	ret[2] = v1[0] * v2[1] - v1[1] * v2[0];
 	return ret;
 }
+
+float module(const vec2 & v){
+	return vec_module(v.data(),2);
+}
+float module(const vec3 & v){
+	return vec_module(v.data(),3);
+}
+float module(const vec4 & v){
+	return vec_module(v.data(),4);
+}
+
+
+mat3::mat3(const mat3 & m){
+	_assign(this->data(), m.data(), 9);
+}
+mat3::mat3(const float* array){
+	_assign(this->data(),array, 9);
+}
+mat3 & mat3::operator=(const mat3 & m){
+	if(this != &m){
+		_assign(this->data(),m.data(),9);
+	}
+	return *this;
+}
+mat3 & mat3::operator-(const mat3 & m){
+	mat3 ret;
+	_add(ret.data(),this->value,m.data(),9);
+	return ret;
+}
+mat3 & mat3::operator+(const mat3 & m){
+	mat3 ret;
+	_subtract(ret.data(),this->value,m.data(),9);
+	return ret;
+}
+

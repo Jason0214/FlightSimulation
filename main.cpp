@@ -19,7 +19,7 @@
 #include "Skybox.h"
 #include "Shader.h"
 #include "Camera.h"
-#include "ObjQueue.h"
+#include "Scene.h"
 #include "Model.h"
 #include "DepthMap.h"
 #include "LightSrc.h"
@@ -27,10 +27,11 @@
 using namespace std;
 
 
-Camera camera(0.0, 0.0, 5.0);
+Camera camera(0.0, 5.0, 5.0);
 SkyBox skybox;
-ObjectQueue scene(1);
+Scene scene(1);
 Model* tree[4];
+Model* mountain;
 LightSrc sun(vec3(0.5, 0.5, 0.5));
 DepthMap shadowMap(1024,1024); //TODO
 
@@ -43,6 +44,7 @@ static void KeyPress(unsigned char key, int x, int y);
 static void ChangeSize(int width, int height);
 static void MouseMove(int, int);
 static void ResetMouse(int state);
+static void ReProjection();
 
 static void init() {
 	glGetError(); // for glew bug
@@ -60,20 +62,30 @@ static void init() {
 		skybox.shader.LoadShader("./shaders/skybox_shader.vs", "./shaders/skybox_shader.frag");
 		// init tree model
 		Shader tree_shader;
-		tree_shader.LoadShader("./shaders/model_shader.vs", "./shaders/model_shader.frag");
+		Shader mountain_shader;
+		tree_shader.LoadShader("./shaders/tree_shader.vs", "./shaders/tree_shader.frag");
+		mountain_shader.LoadShader("./shaders/background_shader.vs", "./shaders/background_shader.frag");
 		for (unsigned int i = 0; i < 4; i++) {
 			tree[i] = new Model(GL_STATIC_DRAW);
 			tree[i]->shader = tree_shader;
 		}
-		tree[0]->Load("./assets/tree1/OC26_2.obj");
-		tree[1]->Load("./assets/tree1/OC26_3.obj");
-		tree[2]->Load("./assets/tree1/OC26_4.obj");
-		tree[3]->Load("./assets/tree1/OC26_8.obj");
+		tree[0]->Load("./assets/tree/OC26_2.obj");
+		tree[1]->Load("./assets/tree/OC26_3.obj");
+		tree[2]->Load("./assets/tree/OC26_4.obj");
+		tree[3]->Load("./assets/tree/OC26_8.obj");
+		mountain = new Model(GL_STATIC_DRAW);
+		mountain->Load("./assets/terrain/mountains.obj");
+		mountain->shader = mountain_shader;
 		// assign the position of tree model
-		scene.AppendObject(vec3(0, 0, 0), tree[0] ,vec3(1.0f,0.0f,0.0f), -90.0f);
-		scene.AppendObject(vec3(2, 0, 0), tree[1] ,vec3(1.0f, 0.0f, 0.0f), -90.0f);
-		scene.AppendObject(vec3(4, 0, 0), tree[2] ,vec3(1.0f, 0.0f, 0.0f), -90.0f);
-		scene.AppendObject(vec3(12, 0, 0), tree[3] ,vec3(1.0f, 0.0f, 0.0f), -90.0f);
+		scene.AppendObject(vec3(0, 0, 0.4), tree[0] ,vec3(1.0f,0.0f,0.0f), -90.0f);
+		scene.AppendObject(vec3(2, 0, 0.4), tree[1] ,vec3(1.0f, 0.0f, 0.0f), -90.0f);
+		scene.AppendObject(vec3(4, 0, 0.4), tree[2] ,vec3(1.0f, 0.0f, 0.0f), -90.0f);
+		scene.AppendObject(vec3(12, 0, 0.3), tree[3] ,vec3(1.0f, 0.0f, 0.0f), -90.0f);
+		scene.AppendBackGround(vec3(0, -22, 0), mountain, vec3(0.0f, 0.0f, 0.0f), 0.0f);
+		scene.radius = 20.0f;
+		// init depth frame
+		shadowMap.init();
+		shadowMap.shader.LoadShader("./shaders/shadow_map_shader.vs", "./shaders/shadow_map_shader.frag");
 	}
 	catch (const LoadFileError & e) {
 		cout << e.Info();
@@ -93,15 +105,23 @@ static void init() {
 }
 
 static void Display() {
+// render depth map
+	scene.Arrange(camera.front, camera.position);
+	shadowMap.begRenderDirLight(sun.direction, scene.radius);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		scene.RenderFrame(shadowMap.shader);
+	shadowMap.endRender();
+// real render
+	ReProjection();
 	glMatrixMode(GL_MODELVIEW); 
 	glLoadIdentity();
-	gluLookAt(camera.position.x(), camera.position.y(), camera.position.z(), camera.position.x() + camera.front.x(), camera.position.y() + camera.front.y(), camera.position.z() + camera.front.z(), camera.up.x(),camera.up.y(),camera.up.z());
-// draw skybox
+	gluLookAt(camera.position.x(), camera.position.y(), camera.position.z(), 
+	camera.position.x() + camera.front.x(), camera.position.y() + camera.front.y(), camera.position.z() + camera.front.z(),
+						camera.up.x(),camera.up.y(),camera.up.z());
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-	skybox.Draw(camera.position.x(), camera.position.y(), camera.position.z());
-	scene.ReOrganize(camera.front, camera.position);
-	scene.DrawAll(sun, shadowMap);
-//
+	skybox.Draw(camera.position.x(), camera.position.y(), camera.position.z());;
+	scene.RenderAll(sun, shadowMap);
+	scene.ResetArrange();
 	glutSwapBuffers();
 }
 
@@ -110,7 +130,7 @@ int main(int argc, char* argv[]) {
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE );
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(600, 600);
-	glutCreateWindow("Skybox Demo");
+	glutCreateWindow("Mountain");
 	glewExperimental = GL_TRUE;
 	glewInit();
 	//
@@ -124,17 +144,21 @@ int main(int argc, char* argv[]) {
 }
 
 static void ChangeSize(int width, int height) {
-	glViewport(0, 0, (GLuint)width, (GLuint)height);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
-	glutSetCursor(GLUT_CURSOR_NONE);
-	glutWarpPointer(width / 2, height / 2);
-//re init mouse
 	window_height = height;
 	window_width = width;
+	ReProjection();
+//re init mouse
 	last_mouse_x = window_width / 2;
 	last_mouse_y = window_height / 2;
+	glutSetCursor(GLUT_CURSOR_NONE);
+	glutWarpPointer(window_width / 2, window_width / 2);
+}
+
+static void ReProjection() {
+	glViewport(0, 0, (GLuint)window_width, (GLuint)window_height);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0f, (GLfloat)window_width / (GLfloat)window_height, 1.0f, 500.0f);
 }
 
 static void MouseMove(int x, int y) {
@@ -142,8 +166,13 @@ static void MouseMove(int x, int y) {
 	camera.yaw += (x - last_mouse_x) * DEGREE_PER_PIXEL_MOVED_BY_MOUSE;
 	camera.pitch += (last_mouse_y - y) * DEGREE_PER_PIXEL_MOVED_BY_MOUSE;
 	camera.reposition();
-	last_mouse_x = x;
-	last_mouse_y = y;
+	if (x < 50 || x > window_width - 50 || y < 50 || y > window_height - 50) {
+		ResetMouse(0);
+	}
+	else {
+		last_mouse_x = x;
+		last_mouse_y = y;
+	}
 	glutPostRedisplay();
 }
 
@@ -172,6 +201,6 @@ static void KeyPress(unsigned char key, int x, int y) {//XXX
 		camera.moveright();
 		break;
 	}
-//	cout << camera.position.x() << " " << camera.position.y() << " "<< camera.position.z() << " " <<  endl;
+	cout << camera.position.x() << " " << camera.position.y() << " "<< camera.position.z() << " " <<  endl;
 	glutPostRedisplay();
 }

@@ -7,14 +7,12 @@ Camera::Camera(float x, float y, float z):position(x, y, z),front(0.0f,0.0f,-1.0
 }
 
 void Camera::moveleft() {
-	vec3 v_left = cross(this->up, this->front);
-	normalize(v_left);
+	vec3 v_left = normalize(cross(this->up, this->front));
 	this->position = this->position + v_left * this->move_speed;
 }
 
 void Camera::moveright() {
-	vec3 v_left = cross(this->up, this->front);
-	normalize(v_left);
+	vec3 v_left = normalize(cross(this->up, this->front));
 	this->position = this->position - v_left * this->move_speed;
 }
 

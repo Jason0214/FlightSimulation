@@ -1,6 +1,9 @@
 #include "Shader.h"
 #include "Exception.h"
+#include <string>
 #include <fstream>
+
+using namespace std;
 
 static char* ReadShaderCode(const char* shader_path);
 static void CompileShader(GLuint shader_ID, const char* v_shader_code, GLuint program_ID);
@@ -18,14 +21,25 @@ void Shader::LoadShader(const char* vertex_shader_path, const char* fragment_sha
 	// vertax shader
 	/* 从文件中读取顶点着色器的代码 */
 	v_shader_code = ReadShaderCode(vertex_shader_path);
+	f_shader_code = ReadShaderCode(fragment_shader_path);
 	/* 创建一个顶点着色器的ID */
 	v_shader_ID = glCreateShader(GL_VERTEX_SHADER);
-	/* 编译代码并绑定到刚刚创建的ID上 */
-	CompileShader(v_shader_ID,v_shader_code,this->ProgramID);
-	// fragment shader
-	f_shader_code = ReadShaderCode(fragment_shader_path);
 	f_shader_ID = glCreateShader(GL_FRAGMENT_SHADER);
-	CompileShader(f_shader_ID, f_shader_code,this->ProgramID);
+	/* 编译代码并绑定到刚刚创建的ID上 */
+	try {
+		CompileShader(v_shader_ID, v_shader_code, this->ProgramID);
+	}
+	catch (ShaderCompileError & e) {
+		e.error_info = string(vertex_shader_path) + ": " + e.error_info;
+		throw e;
+	}
+	try {
+		CompileShader(f_shader_ID, f_shader_code, this->ProgramID);
+	}
+	catch (ShaderCompileError & e) {
+		e.error_info = string(fragment_shader_path) + ": " + e.error_info;
+		throw e;
+	}
 	delete [] v_shader_code;
 	delete [] f_shader_code;
 }
