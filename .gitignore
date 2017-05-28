@@ -8,7 +8,5 @@
 
 # for model
 *.obj
-*.png
-*.jpg
 *.mtl
 *.xfr
