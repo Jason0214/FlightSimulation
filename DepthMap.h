@@ -17,13 +17,14 @@ public:
 	GLuint FBO;
 	Shader shader;
 	GLuint depth_textureID;
-	//Shader test_shader;
 	GLfloat light_space_view[16];
 	GLfloat light_space_project[16];
-private:
 	GLuint map_width;
 	GLuint map_height;
-	//void test_init();
-	//GLuint test_VAO;
-	//GLuint test_VBO;
+//for test
+	Shader test_shader;
+	void test_init();
+private:
+	GLuint test_VAO;
+	GLuint test_VBO;
 };

@@ -112,6 +112,7 @@ void Model::Load(string path) {
 
 void Model::Render(vec3 & position, vec3 & pivot, float angle, const LightSrc & sun, const DepthMap & depth_buffer) const{
 	GLfloat matrix_buf[16];
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	if (angle != 0.0f)
 		glRotatef(angle, pivot[0], pivot[1], pivot[2]);
@@ -149,6 +150,7 @@ void Model::Render(vec3 & position, vec3 & pivot, float angle, const LightSrc & 
 
 void Model::RenderFrame(vec3 & position, vec3 & pivot, float angle,const Shader & frame_shader) const {
 	GLfloat matrix_buf[16];
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	if (angle != 0.0f)
 		glRotatef(angle, pivot[0], pivot[1], pivot[2]);

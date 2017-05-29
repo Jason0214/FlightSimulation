@@ -10,6 +10,14 @@ float aTan(float theta) {
 	return tan((theta)*RAD_PER_DEGREE);
 }
 
+float Power(float x, int exp){
+	float res = 1.0f;
+	for (int i = 0; i < exp; i++) {
+		res *= x;
+	}
+	return res;
+}
+
 static inline void _subtract(float* des,const float* src1,const float* src2, int len) {
 	for (int i = 0; i < len; i++) {
 		des[i] = src1[i] - src2[i];

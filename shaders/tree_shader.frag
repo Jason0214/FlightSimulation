@@ -18,11 +18,19 @@ uniform vec3 light_color;
 
 float CalculateShadow(vec4 LightSpaceFragPos){
     // change from range (-1,1) to (0,1)
+    float shadow_value;
     vec3 depth_texture_coords = (LightSpaceFragPos.xyz / LightSpaceFragPos.w) * 0.5 + 0.5;
-    float closest_depth = texture(depth_map, depth_texture_coords.xy).r;
-    float current_depth = depth_texture_coords.z;
-    float bias = max(0.05 * (1.0 - dot(Normal, LightDirection)), 0.005); 
-    float shadow_value = current_depth - bias > closest_depth ? 1.0 : 0.0;
+    if( 0.0f < depth_texture_coords.x && depth_texture_coords.x < 1.0f 
+&& 0.0f < depth_texture_coords.y && depth_texture_coords.y < 1.0f
+&& 0.0f < depth_texture_coords.z &&  depth_texture_coords.z < 1.0f){
+        float closest_depth = texture(depth_map, depth_texture_coords.xy).r;
+        float current_depth = depth_texture_coords.z;
+        float bias = max(0.05 * (1.0 - dot(Normal, LightDirection)), 0.005f); 
+        shadow_value = current_depth - bias > closest_depth ? 1.0f : 0.0f;    
+    }
+    else{
+        shadow_value = 0.0f;
+    }
     return shadow_value;
 }
 
@@ -52,8 +60,7 @@ void main(){
     float shadow = CalculateShadow(LightSpaceFragPos);
 
 // get color which is the combination of ambient, diffuse and specular
-    color = vec4(ambient + (1.0f - shadow)*(diffuse + specular), alpha);
-
+    color = vec4(ambient + (1.0f - shadow)*(diffuse + specular),alpha);
 
 // alpha check to get correct depth
     if(color.a > 0.5f){

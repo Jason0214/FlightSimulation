@@ -100,6 +100,7 @@ void SkyBox::DeployTexture() {
 }
 
 void SkyBox::Draw(GLfloat camera_x, GLfloat camera_y, GLfloat camera_z) {
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	/* 将纹理移动到照相机的位置 */
 	glTranslatef(camera_x, camera_y, camera_z);

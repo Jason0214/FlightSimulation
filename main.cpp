@@ -27,16 +27,15 @@
 using namespace std;
 
 
-Camera camera(0.0, 5.0, 5.0);
+Camera camera(0.0f, 5.0f, 5.0f);
 SkyBox skybox;
-Scene scene(1);
+Scene scene(2); //multi frustum
+LightSrc sun(vec3(0.5f, 0.5f, 0.5f));
+DepthMap shadowMap(1024, 1024); //TODO
+
 Model* tree[4];
 Model* mountain;
-LightSrc sun(vec3(0.5, 0.5, 0.5));
-DepthMap shadowMap(1024,1024); //TODO
 
-static GLint window_width;
-static GLint window_height;
 static GLint last_mouse_x;
 static GLint last_mouse_y;
 
@@ -44,7 +43,6 @@ static void KeyPress(unsigned char key, int x, int y);
 static void ChangeSize(int width, int height);
 static void MouseMove(int, int);
 static void ResetMouse(int state);
-static void ReProjection();
 
 static void init() {
 	glGetError(); // for glew bug
@@ -86,6 +84,9 @@ static void init() {
 		// init depth frame
 		shadowMap.init();
 		shadowMap.shader.LoadShader("./shaders/shadow_map_shader.vs", "./shaders/shadow_map_shader.frag");
+
+		shadowMap.test_init();
+		shadowMap.test_shader.LoadShader("./shaders/test_shader.vs", "./shaders/test_shader.frag");
 	}
 	catch (const LoadFileError & e) {
 		cout << e.Info();
@@ -105,22 +106,27 @@ static void init() {
 }
 
 static void Display() {
-// render depth map
 	scene.Arrange(camera.front, camera.position);
-	shadowMap.begRenderDirLight(sun.direction, scene.radius);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		scene.RenderFrame(shadowMap.shader);
-	shadowMap.endRender();
-// real render
-	ReProjection();
-	glMatrixMode(GL_MODELVIEW); 
-	glLoadIdentity();
-	gluLookAt(camera.position.x(), camera.position.y(), camera.position.z(), 
-	camera.position.x() + camera.front.x(), camera.position.y() + camera.front.y(), camera.position.z() + camera.front.z(),
-						camera.up.x(),camera.up.y(),camera.up.z());
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-	skybox.Draw(camera.position.x(), camera.position.y(), camera.position.z());;
-	scene.RenderAll(sun, shadowMap);
+	// render depth map
+		glViewport(0, 0, shadowMap.map_width, shadowMap.map_height);
+		shadowMap.begRenderDirLight(sun.direction, scene.radius);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			scene.RenderFrame(shadowMap.shader);
+		shadowMap.endRender();
+	// real render
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glViewport(0, 0, scene.window_width, scene.window_height);
+		glMatrixMode(GL_MODELVIEW); 
+		glLoadIdentity();
+		gluLookAt(camera.position.x(), camera.position.y(), camera.position.z(), 
+		camera.position.x() + camera.front.x(), camera.position.y() + camera.front.y(), camera.position.z() + camera.front.z(),
+							camera.up.x(),camera.up.y(),camera.up.z());
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		gluPerspective(45.0f, (GLfloat)scene.window_width / (GLfloat)scene.window_height,1.0f,10.0f);
+		skybox.Draw(camera.position.x(), camera.position.y(), camera.position.z());
+		scene.RenderAll(sun, shadowMap);
+		//shadowMap.ShowTexture();
 	scene.ResetArrange();
 	glutSwapBuffers();
 }
@@ -144,21 +150,12 @@ int main(int argc, char* argv[]) {
 }
 
 static void ChangeSize(int width, int height) {
-	window_height = height;
-	window_width = width;
-	ReProjection();
+	scene.window_height = height;
+	scene.window_width = width;
+	glViewport(0, 0, (GLuint)width, (GLuint)height);
 //re init mouse
-	last_mouse_x = window_width / 2;
-	last_mouse_y = window_height / 2;
 	glutSetCursor(GLUT_CURSOR_NONE);
-	glutWarpPointer(window_width / 2, window_width / 2);
-}
-
-static void ReProjection() {
-	glViewport(0, 0, (GLuint)window_width, (GLuint)window_height);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(45.0f, (GLfloat)window_width / (GLfloat)window_height, 1.0f, 500.0f);
+	ResetMouse(0);
 }
 
 static void MouseMove(int x, int y) {
@@ -166,7 +163,7 @@ static void MouseMove(int x, int y) {
 	camera.yaw += (x - last_mouse_x) * DEGREE_PER_PIXEL_MOVED_BY_MOUSE;
 	camera.pitch += (last_mouse_y - y) * DEGREE_PER_PIXEL_MOVED_BY_MOUSE;
 	camera.reposition();
-	if (x < 50 || x > window_width - 50 || y < 50 || y > window_height - 50) {
+	if (x < 50 || x > scene.window_width - 50 || y < 50 || y > scene.window_height - 50) {
 		ResetMouse(0);
 	}
 	else {
@@ -177,9 +174,9 @@ static void MouseMove(int x, int y) {
 }
 
 static void ResetMouse(int state) {
-	glutWarpPointer(window_width / 2, window_height / 2);
-	last_mouse_x = window_width / 2;
-	last_mouse_y = window_height / 2;
+	glutWarpPointer(scene.window_width / 2, scene.window_height / 2);
+	last_mouse_x = scene.window_width / 2;
+	last_mouse_y = scene.window_height / 2;
 }
 
 static void KeyPress(unsigned char key, int x, int y) {//XXX

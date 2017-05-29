@@ -30,7 +30,7 @@ void main()
 
 //  texture coordinates
     TexCoords = texCoords; 
-
+    
 // light space position, for shadow mapping
 	LightSpaceFragPos = light_space_projection * light_space_view * vec4(position,1.0);
 }

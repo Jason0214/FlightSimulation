@@ -27,10 +27,13 @@ public:
 	}
 	void Arrange(const vec3 & camera_front,const vec3 & camera_position);
 	void ResetArrange();
+	void ReProject(int level_index)const;
 	void RenderAll(const LightSrc & sun, const DepthMap & depth_buffer)const;//XXX
 	void RenderFrame(const Shader & frame_shader)const;
 	void FreeAll();
 	GLfloat radius;
+	GLint window_width;
+	GLint window_height;
 private:
 	int level_num;
 	int object_num;

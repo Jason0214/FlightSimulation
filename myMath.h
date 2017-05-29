@@ -7,6 +7,8 @@ float aCos(float );
 float aSin(float );
 float aTan(float );
 
+float Power(float x, int exp);
+
 class vec4 {
 public:
 	vec4(float x = 0.0f, float y = 0.0f, float z = 0.0f, float w = 0.0f) {
