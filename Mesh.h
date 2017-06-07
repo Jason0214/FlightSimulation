@@ -20,7 +20,24 @@ typedef struct texture_struct {
 	std::string filename;
 }Texture;
 
-typedef struct mesh_data_struct{
+
+class Mesh {
+public:
+	Mesh(){};
+	~Mesh();
+	void init(unsigned int v_num, unsigned int i_num);
+	void deploy(GLenum model_type);
+	void render(GLuint program) const;
+	void render_frame(GLuint program)const;
+	Vertex* GetVertexPtr() {
+		return this->vertices;
+	}
+	GLuint* GetIndexPtr() {
+		return this->indices;
+	}
+	std::vector<Texture> specular_texture;
+	std::vector<Texture> diffuse_texture;	
+
 	Vertex* vertices;
 	GLuint* indices;
 	unsigned int v_num;
@@ -28,27 +45,4 @@ typedef struct mesh_data_struct{
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;
-}MeshData;
-
-class Mesh {
-public:
-	Mesh(unsigned int level_num=1):level_num(level_num){
-		this->data = new MeshData[this->level_num];
-	};
-	~Mesh();
-	void init(unsigned int level, unsigned int v_num, unsigned int i_num);
-	void deploy(GLenum model_type,unsigned int level=0);
-	void render(GLuint program,unsigned int level=0) const;
-	void render_frame(GLuint program)const;
-	Vertex* GetVertexPtr(unsigned int level) {
-		return this->data[level].vertices;
-	}
-	GLuint* GetIndexPtr(unsigned int level) {
-		return this->data[level].indices;
-	}
-	std::vector<Texture> specular_texture;
-	std::vector<Texture> diffuse_texture;	
-private:
-	MeshData* data;
-	unsigned int level_num;
 };

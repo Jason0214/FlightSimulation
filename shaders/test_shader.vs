@@ -1,5 +1,5 @@
 #version 330
-#extension GL_ARB_explicit_uniform_location : require
+
 
 layout (location = 0) in vec2 position;
 layout (location = 1) in vec2 texCoords;

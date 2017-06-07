@@ -40,6 +40,7 @@ public:
 		return *this * (1/k);
 	}
 	vec4 operator+ (const vec4 & v) const;
+	vec4 operator+=(const vec4 & v);
 	vec4 operator- (const vec4 & v) const;
 	vec4 operator-() const{return vec4(0.0f,0.0f,0.0f,0.0f) - *this;};	
 	float operator* (const vec4 & v) const;
@@ -86,6 +87,7 @@ public:
 		return *this * (1/k);
 	}	
 	vec3 operator+ (const vec3 & v) const;
+	vec3 operator+=(const vec3 & v);
 	vec3 operator- (const vec3 & v) const;
 	vec3 operator-() const{return vec3(0.0f,0.0f,0.0f) - *this;}
 	float operator* (const vec3 & v) const;
@@ -123,6 +125,7 @@ public:
 		return *this * (1/k);
 	}		
 	vec2 operator+ (const vec2 & v) const;
+	vec2 operator+=(const vec2 & v);
 	vec2 operator- (const vec2 & v) const;
 	vec2 operator-() const{return vec2(0.0f,0.0f) - *this;};
 	float operator* (const vec2 & v) const;
@@ -131,9 +134,9 @@ private:
 	float value[2];
 };
 
-//float dot(vec2 v1, vec2 v2){return v1*v2;}
-//float dot(vec3 v1, vec3 v2){return v1*v2;}
-//float dot(vec4 v1, vec4 v2){return v1*v2;}
+vec2 dot(vec2 v1, vec2 v2);
+vec3 dot(vec3 v1, vec3 v2);
+vec4 dot(vec4 v1, vec4 v2);
 
 vec3 cross(const vec3 & v1, const vec3 & v2);
 

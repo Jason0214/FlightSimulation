@@ -11,7 +11,7 @@ public:
 class LoadFileError :public Exception{
 public:
 	LoadFileError(char* file_name) : err_file(file_name) {}
-	LoadFileError(std::string & file_name) : err_file(file_name) {}
+	LoadFileError(const std::string & file_name) : err_file(file_name) {}
 	LoadFileError(const char* file_name = "foo") : err_file(file_name) {}
 	~LoadFileError() {};
 	std::string Info() const{ return "load from "+err_file+" failed.\n";}

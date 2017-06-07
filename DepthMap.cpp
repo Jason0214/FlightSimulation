@@ -9,9 +9,9 @@ DepthMap::~DepthMap(){
 	glDeleteFramebuffers(1, &(this->FBO));
 }
 
-void DepthMap::begRenderDirLight(vec3 & light_dir,GLfloat ortho_radius){
+void DepthMap::begRenderDirLight(vec3 & light_dir,GLfloat ortho_radius, vec3 & center){
 	// height_offset stands for the highest object in the scene
-	vec3 light_position = light_dir*ortho_radius;
+	vec3 light_position = light_dir*ortho_radius + center;
 	// change matrix
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -21,7 +21,7 @@ void DepthMap::begRenderDirLight(vec3 & light_dir,GLfloat ortho_radius){
 	glOrtho(-ortho_radius, ortho_radius, -ortho_radius, ortho_radius, 0.0f, 2 * ortho_radius);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluLookAt(light_position.x(),light_position.y(),light_position.z(),0.0f,0.0f,0.0f,0.0f,1.0f,0.0f);
+	gluLookAt(light_position.x(),light_position.y(),light_position.z(),center.x(), center.y(), center.z(), 0.0f,1.0f,0.0f);
 	glGetFloatv(GL_PROJECTION_MATRIX, this->light_space_project);
 	glGetFloatv(GL_MODELVIEW_MATRIX, this->light_space_view);
 	// begin render

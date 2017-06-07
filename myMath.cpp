@@ -73,6 +73,11 @@ vec2 vec2::operator+ (const vec2 & v) const {
 	_add(ret.data(), this->data(), v.data(), 2);
 	return ret;
 }
+
+vec2 vec2::operator+=(const vec2 & v) {
+	_add(this->data(), this->data(), v.data(), 2);
+}
+
 vec2 vec2::operator- (const vec2 & v) const {
 	vec2 ret;
 	_subtract(ret.data(), this->data(), v.data(), 2);
@@ -98,6 +103,11 @@ vec3 vec3::operator+ (const vec3 & v) const {
 	_add(ret.data(), this->data(), v.data(), 3);
 	return ret;
 }
+
+vec3 vec3::operator+=(const vec3 & v){
+	_add(this->data(), this->data(), v.data(), 3);
+}
+
 vec3 vec3::operator- (const vec3 & v) const {
 	vec3 ret;
 	_subtract(ret.data(), this->data(), v.data(), 3);
@@ -122,6 +132,9 @@ vec4 vec4::operator+ (const vec4 & v) const {
 	vec4 ret;
 	_add(ret.data(), this->data(), v.data(), 4);
 	return ret;
+}
+vec4 vec4::operator+=(const vec4 & v) {
+	_add(this->data(), this->data(), v.data(), 4);
 }
 vec4 vec4::operator- (const vec4 & v) const {
 	vec4 ret;

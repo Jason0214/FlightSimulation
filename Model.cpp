@@ -4,7 +4,7 @@
 
 using namespace std;
 
-static GLuint LoadTexture(const char* filename,string & directory) {
+GLuint Model::LoadTexture(const char* filename,string & directory) {
 	string path = directory + "/"+ string(filename);
 	GLuint textureID;
 	glGenTextures(1, &textureID);
@@ -54,10 +54,10 @@ vector<Texture> Model::LoadMeshMaterial(aiMaterial* material, aiTextureType type
 }
 
 void Model::LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, string & directory) {
-	mesh.init(0, raw_mesh->mNumVertices, (raw_mesh->mNumFaces)*3); //level 0 is the original model
+	mesh.init(raw_mesh->mNumVertices, (raw_mesh->mNumFaces)*3); //level 0 is the original model
 //	cout << "v num:" << mesh.v_num << endl;
-	Vertex* vertices_ptr = mesh.GetVertexPtr(0);
-	GLuint* indices_ptr = mesh.GetIndexPtr(0);
+	Vertex* vertices_ptr = mesh.GetVertexPtr();
+	GLuint* indices_ptr = mesh.GetIndexPtr();
 	for (unsigned int i = 0; i < raw_mesh->mNumVertices; i++) {
 		vertices_ptr[i].position_x = raw_mesh->mVertices[i].x;
 		vertices_ptr[i].position_y = raw_mesh->mVertices[i].y;
@@ -89,10 +89,11 @@ void Model::LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, st
 		vector<Texture> specular_textures = this->LoadMeshMaterial(material, aiTextureType_SPECULAR, directory );
 		mesh.specular_texture.insert(mesh.specular_texture.end(), specular_textures.begin(), specular_textures.end());
 	}
-	mesh.deploy(this->model_type);
+	mesh.deploy(this->Model::draw_type);
 }
 
-void Model::Load(string path) {
+void Model::Load(string path, unsigned int level_index) {
+	MeshData & current_mesh_set = this->data[level_index];
 	string directory = path.substr(0, path.find_last_of('/'));
 	Assimp::Importer import;
 	const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
@@ -101,22 +102,26 @@ void Model::Load(string path) {
 		throw LoadModelError( "ERROR::ASSIMP::"+ string(import.GetErrorString()));
 	}
 // load mesh
-	this->mesh_num = scene->mNumMeshes;
-	this->meshes = new Mesh[this->mesh_num];
+	current_mesh_set.mesh_num = scene->mNumMeshes;
+	current_mesh_set.meshes = new Mesh[current_mesh_set.mesh_num];
 //	cout << "mesh num:" << this->mesh_num << endl;
-	for (unsigned int i = 0; i < this->mesh_num; i++) {
-		this->LoadMeshData(this->meshes[i],scene->mMeshes[i], scene, directory);
+	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
+		this->LoadMeshData(current_mesh_set.meshes[i],scene->mMeshes[i], scene, directory);
 	}
 	import.FreeScene();
 }
 
-void Model::Render(vec3 & position, vec3 & pivot, float angle, const LightSrc & sun, const DepthMap & depth_buffer) const{
-	GLfloat matrix_buf[16];
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+void StaticModel::Translate(vec3 & position, vec3 pivot, float angle) const{
+	glTranslatef(position.x(), position.y(), position.z());
 	if (angle != 0.0f)
 		glRotatef(angle, pivot[0], pivot[1], pivot[2]);
-	glTranslatef(position.x(), position.y(), position.z());
+}
+
+void StaticModel::Render(vec3 & position, unsigned int level_index, vec3 & pivot, float angle, const LightSrc & sun, const DepthMap & depth_buffer) const{
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	GLfloat matrix_buf[16];
+	this->Translate(position, pivot, angle);
 // select shader program
 	this->shader.Use();
 // move to the position in world coordicate
@@ -127,9 +132,7 @@ void Model::Render(vec3 & position, vec3 & pivot, float angle, const LightSrc & 
 // pass in light space matrices
 	glPushMatrix();
 		glLoadMatrixf(depth_buffer.light_space_view);
-		if (angle != 0.0f)
-			glRotatef(angle, pivot[0], pivot[1], pivot[2]);
-		glTranslatef(position.x(), position.y(), position.z());
+		this->Translate(position, pivot, angle);
 		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view"), 1, GL_FALSE, matrix_buf);
 	glPopMatrix();
@@ -141,26 +144,27 @@ void Model::Render(vec3 & position, vec3 & pivot, float angle, const LightSrc & 
 // pass in light param
 	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
 	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);
-// draw every mesh
-	for (unsigned int i = 0; i < this->mesh_num; i++) {
-		this->meshes[i].render(this->shader.ProgramID);
+	// draw every mesh
+	MeshData & current_mesh_set = this->data[level_index];
+	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
+		current_mesh_set.meshes[i].render(this->shader.ProgramID);
 	}
 	glPopMatrix();
 }
 
-void Model::RenderFrame(vec3 & position, vec3 & pivot, float angle,const Shader & frame_shader) const {
-	GLfloat matrix_buf[16];
+void StaticModel::RenderFrame(vec3 & position, unsigned int level_index, vec3 & pivot, float angle,const Shader & frame_shader) const {
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	if (angle != 0.0f)
-		glRotatef(angle, pivot[0], pivot[1], pivot[2]);
-	glTranslatef(position.x(), position.y(), position.z());
+	GLfloat matrix_buf[16];
+	this->Translate(position, pivot, angle);
 	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
 	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-	for (unsigned int i = 0; i < this->mesh_num; i++) {
-		this->meshes[i].render_frame(frame_shader.ProgramID);
+	// draw every mesh
+	MeshData & current_mesh_set = this->data[level_index];
+	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
+		current_mesh_set.meshes[i].render(this->shader.ProgramID);
 	}
 	glPopMatrix();
 }

@@ -1,9 +1,9 @@
 #include "Camera.h"
 
-Camera::Camera(float x, float y, float z):position(x, y, z),front(0.0f,0.0f,-1.0f),up(0.0f,1.0f,0.0f){
+Camera::Camera(float x, float y, float z):position(x, y, z),front(1.0f,0.0f,0.0f),up(0.0f,1.0f,0.0f){
 	this->yaw = -90.0;
 	this->pitch = 0.0;
-	this->move_speed = 0.2f;
+	this->move_speed = 5.0f;
 }
 
 void Camera::moveleft() {

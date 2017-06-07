@@ -3,41 +3,59 @@
 #include "Model.h"
 #include "LightSrc.h"
 #include "DepthMap.h"
+#include "BackGround.h"
+#include "Plane.h"
 #include <map>
 
-class ListNode{
+class PositionListNode{
 public:
-	ListNode(const vec3 & position, Model* type, const vec3 & pivot, float angle):next(NULL),position(position),type(type),pivot(pivot),angle(angle){}
-	~ListNode() {}
+	PositionListNode(const vec3 & position, StaticModel* instance, const vec3 & pivot, float angle)
+			:next(NULL),position(position),instance(instance),pivot(pivot),angle(angle){}
+	~PositionListNode() {}
 	vec3 position;
 	vec3 pivot;
 	float angle;
-	Model* type;
-	ListNode* next;
+	StaticModel* instance;
+	PositionListNode* next;
+};
+
+class InstanceListNode {
+public:
+	InstanceListNode(StaticModel* instance):instance(instance),next(NULL){}
+	~InstanceListNode() {};
+	StaticModel* instance;
+	InstanceListNode* next;
 };
 
 class Scene{
 public:
-	Scene(int level_num);
-	~Scene() { this->FreeAll(); delete [] this->leveled_set; }
-	void AppendObject(vec3 & position, Model* type, vec3 & rotate = vec3(0.0f,0.0f,0.0f), float angle = 0.0f);
-	void AppendBackGround(vec3 & position, Model* instance, vec3 & rotate = vec3(0.0f, 0.0f, 0.0f), float angle = 0.0f) {
-		ListNode* ptr_new = new ListNode(position, instance, rotate, angle);
-		this->background = ptr_new;
+	Scene(int frustum_num);
+	~Scene() { 
+		this->FreeAll(); 
+		delete [] this->dist_order_dict;
 	}
+	void FreeAll();
+
+	void AppendObject(vec3 & position, StaticModel* instance, vec3 & rotate = vec3(0.0f,0.0f,0.0f), float angle = 0.0f);
+	void ReProject(int level_index)const;
+
 	void Arrange(const vec3 & camera_front,const vec3 & camera_position);
 	void ResetArrange();
-	void ReProject(int level_index)const;
+
 	void RenderAll(const LightSrc & sun, const DepthMap & depth_buffer)const;//XXX
 	void RenderFrame(const Shader & frame_shader)const;
-	void FreeAll();
-	GLfloat radius;
+
+	void CheckCollision() const;
+
+	BackGround* background;
+	PlaneModel* plane;
+
 	GLint window_width;
 	GLint window_height;
 private:
-	int level_num;
+	int frustum_num;
 	int object_num;
-	ListNode* object_list;
-	std::map<float,ListNode*>* leveled_set;  //XXX: better to be self-built
-	ListNode* background;
+	PositionListNode* object_list;
+	InstanceListNode* object_map[GRID_NUM][GRID_NUM];
+	std::map<GLfloat,PositionListNode*>* dist_order_dict;  //XXX: better to be self-built
 };

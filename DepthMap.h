@@ -9,7 +9,7 @@ class DepthMap{
 public:
 	DepthMap(GLuint map_width, GLuint map_height) :map_width(map_width), map_height(map_height) { };
 	~DepthMap();
-	void begRenderDirLight(vec3 & v, GLfloat ortho_radius);
+	void begRenderDirLight(vec3 & v, GLfloat ortho_radius, vec3 & center);
 	void endRender();
 //	void RenderDotLight(vec3 & v);
 	void init();

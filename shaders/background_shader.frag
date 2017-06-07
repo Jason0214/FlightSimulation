@@ -1,5 +1,5 @@
 #version 330
-#extension GL_ARB_explicit_uniform_location : require
+
 in vec2 TexCoords;
 in vec3 Normal;
 in vec3 LightDirection;
