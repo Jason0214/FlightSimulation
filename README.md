@@ -12,3 +12,7 @@
 ![scene3](./image/scene3.png)
 
 ![scene4](./image/scene4.png)
+
+![plane1](./image/plane1.png)
+
+![plane2](./image/plane2.png)
