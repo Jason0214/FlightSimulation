@@ -10,6 +10,8 @@ public:
 	void RenderFrame(const Shader & frame_shader) const;
 
 	bool is_land;
+	bool is_crash;
+
 	vec3 position;
 	vec3 origin;
 	vec3 front;

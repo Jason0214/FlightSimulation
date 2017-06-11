@@ -33,7 +33,7 @@ using namespace std;
 #define CAMERA 2
 #define PLANE 1
 #define STOP 0
-GLuint VIEW;
+GLuint STATUS;
 
 Camera camera(923.0f, 50.0f, 1000.0f);
 SkyBox skybox;
@@ -78,7 +78,7 @@ static void init() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	srand(time(0));
-	VIEW = PLANE;
+	STATUS = PLANE;
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	memset(Key, false, 256 * sizeof(bool));
 	string cubemap_pic_path[6] = { "./assets/skybox/right.jpg","./assets/skybox/left.jpg","./assets/skybox/top.jpg","./assets/skybox/bottom.jpg","./assets/skybox/back.jpg","./assets/skybox/front.jpg" };
@@ -129,13 +129,13 @@ static void init() {
 		
 		// assign the position of tree model
 		scene.AppendObject(vec3(929.0f, 0, 1018.0f), tree[0]);
-		scene.AppendObject(vec3(934, 0, 1018.0f), tree[1]);
-		scene.AppendObject(vec3(940, 0, 1018.0f), tree[2]);
-		scene.AppendObject(vec3(946, 0, 1018.0f), tree[3]);
-		scene.AppendObject(vec3(966, 0, 1018.0f), tree[2]);
-		scene.AppendObject(vec3(970, 0, 1018.0f), tree[0]);
-		scene.AppendObject(vec3(1200, 0, 990.0f), tree[1]);
-		scene.AppendObject(vec3(1200, 0, 1000.0f), tree[2]);
+		scene.AppendObject(vec3(934.0f, 0, 1018.0f), tree[1]);
+		scene.AppendObject(vec3(940.0f, 0, 1018.0f), tree[2]);
+		scene.AppendObject(vec3(946.0f, 0, 1018.0f), tree[3]);
+		scene.AppendObject(vec3(966.0f, 0, 1018.0f), tree[2]);
+		scene.AppendObject(vec3(970.0f, 0, 1018.0f), tree[0]);
+		scene.AppendObject(vec3(1200.0f, 5.0f, 990.0f), tree[1]);
+		scene.AppendObject(vec3(1200.0f, 5.0f, 1000.0f), tree[2]);
 		scene.background = mountain;
 		scene.plane = plane;
 	}
@@ -157,10 +157,10 @@ static void init() {
 }
 
 static void Display() {
-	if (VIEW == CAMERA) {
+	if (STATUS == CAMERA) {
 		scene.Arrange(camera.front, camera.position);
 	}
-	else {
+	else{
 		scene.Arrange(plane->position - plane->View(), plane->View());
 	}
 		glViewport(0, 0, shadowMap.map_width, shadowMap.map_height);
@@ -176,13 +176,13 @@ static void Display() {
 		gluPerspective(45.0f, (GLfloat)scene.window_width / (GLfloat)scene.window_height, 1.0f, 20.0f);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-		if (VIEW == CAMERA) {
+		if (STATUS == CAMERA) {
 			gluLookAt(camera.position.x(), camera.position.y(), camera.position.z(),
 				camera.position.x() + camera.front.x(), camera.position.y() + camera.front.y(), 
 				camera.position.z() + camera.front.z(), camera.up.x(), camera.up.y(), camera.up.z());
 			skybox.Draw(camera.position.x(), camera.position.y(), camera.position.z());
 		}
-		else {		
+		else{
 			gluLookAt(plane->View().x(), plane->View().y(), plane->View().z(),
 				plane->position.x(), plane->position.y(), plane->position.z(),
 				0.0f, 1.0f, 0.0f);
@@ -217,11 +217,19 @@ int main(int argc, char* argv[]) {
 }
 
 static void Movement(int timer_id) {
-	if (VIEW == STOP) {
-		
+	if (STATUS == STOP) {
+		if (Key['0']) {
+			STATUS = PLANE;
+			plane->init();
+			glutTimerFunc(20, Movement, PLANE);
+			glutTimerFunc(200, CollisionDetect, 1);
+		}
+		else {
+			glutTimerFunc(20, Movement, STOP);
+		}
 	}
-	else if (timer_id == PLANE) {
-		VIEW = PLANE;
+	else if (STATUS == PLANE) {
+		STATUS = PLANE;
 		if (Key['W'] || Key['w']) {
 			plane->PitchUp();
 		}
@@ -258,9 +266,10 @@ static void Movement(int timer_id) {
 			glutTimerFunc(20, Movement, PLANE);
 		}
 		plane->Forward();
+		glutPostRedisplay();
 	}
-	else if (timer_id = CAMERA) {
-		VIEW = CAMERA;
+	else if (STATUS = CAMERA) {
+		STATUS = CAMERA;
 		if (Key['W'] || Key['w']) {
 			camera.movefront();
 		}
@@ -279,18 +288,28 @@ static void Movement(int timer_id) {
 		else {
 			glutTimerFunc(20, Movement, PLANE);
 		}
+		glutPostRedisplay();
 	}
-	glutPostRedisplay();
 }
 
 static void CollisionDetect(int timer_id) {
-	try {
-		scene.CheckCollision();
+	if (STATUS != STOP) {
+		try {
+			scene.CheckCollision();
+		}
+		catch (const Collision & e) {
+			plane->is_crash = true;
+			glutPostRedisplay();
+			STATUS = STOP;
+		}
+		catch (const WarningBoard & e) {
+
+		}
+		catch (const ReachBoard & e) {
+			plane->init();
+		}
+		glutTimerFunc(200, CollisionDetect, 1);
 	}
-	catch (const Exception & e) {
-		cout << "collision" << endl;
-	}
-	glutTimerFunc(200, CollisionDetect, 2);
 }
 
 static void ChangeSize(int width, int height) {
@@ -314,7 +333,6 @@ static void MouseMove(int x, int y) {
 		last_mouse_x = x;
 		last_mouse_y = y;
 	}
-	glutPostRedisplay();
 }
 
 static void ResetMouse(int state) {

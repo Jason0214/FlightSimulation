@@ -31,6 +31,7 @@ void PlaneModel::init() {
 	this->fan_spin = 0.0f;
 	
 	this->is_land = true;
+	this->is_crash = false;
 
 	memset(this->posture_mat, 0, sizeof(GLfloat) * 16);
 	this->posture_mat[0] = 1.0f;
@@ -64,7 +65,7 @@ void PlaneModel::Forward() {
 	//cout << "roll:" << this->roll << endl;
 	//cout << "pitch:" << this->pitch << endl;
 
-	this->fan_spin += this->throttle  * 80;
+	this->fan_spin += this->throttle  * 10;
 	if (this->fan_spin > 360.0f) fan_spin -= 360.0f;
 
 	this->speed += this->throttle * this->FULL_ACC - 0.86f * this->speed * this->speed - aSin(this->pitch)*0.05;
@@ -196,10 +197,8 @@ void PlaneModel::Translate()const{
 void PlaneModel::Render(const LightSrc & light, const DepthMap & depth_buffer) const {
 	MeshData & current_mesh_set = this->data[0];
 	GLfloat matrix_buf[16];
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	this->Translate();
 	this->shader.Use();
+	glMatrixMode(GL_MODELVIEW);
 	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
 	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 	glPushMatrix();
@@ -214,7 +213,9 @@ void PlaneModel::Render(const LightSrc & light, const DepthMap & depth_buffer) c
 	glUniform1i(glGetUniformLocation(this->shader.ProgramID, "depth_map"), 0);
 	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), light.direction[0], light.direction[1], light.direction[2]);
 	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), light.color[0], light.color[1], light.color[2]);
-
+	glPushMatrix();
+	this->Translate();
+	if (!this->is_crash) {
 		glPushMatrix();
 			glTranslatef(0.393f, 0.928f, 0.0f);
 			glRotatef(this->fan_spin, aCos(12), aSin(12), 0.0f);
@@ -223,43 +224,46 @@ void PlaneModel::Render(const LightSrc & light, const DepthMap & depth_buffer) c
 			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
 			current_mesh_set.meshes[FAN].render(this->shader.ProgramID);
 		glPopMatrix();
-		//if (this->yaw > 0.0f) {
-		//	glPushMatrix();
-		//	glTranslatef(-2.524f, 0.425f,0.028f);
-		//	glRotatef(45, -0.208f, -0.978f, 0.0f);
-		//	glTranslatef(2.524f, -0.425f, -0.028f);
-		//	this->Translate();
-		//	current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
-		//	glPopMatrix();
-		//}
-		//else if (this->yaw < 0.0f) {
-		//	glPushMatrix();
-		//	glTranslatef(-2.524f, 0.425f, 0.028f);
-		//	glRotatef(-45, -0.208f, -0.978f, 0.0f);
-		//	glTranslatef(2.524f, -0.425f, -0.028f);
-		//	this->Translate();
-		//	current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
-		//	glPopMatrix();
-		//}
-		//else {
-		//	glPushMatrix();
-		//	this->Translate();
-		//	current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
-		//	glPopMatrix();
-		//}
-		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-		current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
-		current_mesh_set.meshes[PITCH_FIN].render(this->shader.ProgramID);
-		current_mesh_set.meshes[BODY].render(this->shader.ProgramID);
-		current_mesh_set.meshes[LEFT_WHEEL].render(this->shader.ProgramID);
-		current_mesh_set.meshes[RIGHT_WHEEL].render(this->shader.ProgramID);
-		current_mesh_set.meshes[LEFT_DOWN_FLAP].render(this->shader.ProgramID);
-		current_mesh_set.meshes[LEFT_UP_FLAP].render(this->shader.ProgramID);
-		current_mesh_set.meshes[RITGHT_DOWN_FLAP].render(this->shader.ProgramID);
-		current_mesh_set.meshes[RITGHT_UP_FLAP].render(this->shader.ProgramID);
-		current_mesh_set.meshes[GUN].render(this->shader.ProgramID);
-
+		if (this->yaw != 0.0f) {
+			glPushMatrix();
+				glTranslatef(-2.524f, 0.425f, 0.028f);
+				glRotatef(this->yaw > 0.0f ? 45.0f : -45.0f, -0.208f, -0.978f, 0.0f);
+				glTranslatef(2.524f, -0.425f, -0.028f);
+				glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+				glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+				current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
+			glPopMatrix();
+		}
+		else {
+			glPushMatrix();
+				glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+				glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+				current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
+			glPopMatrix();
+		}
+			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+			current_mesh_set.meshes[PITCH_FIN].render(this->shader.ProgramID);
+			current_mesh_set.meshes[BODY].render(this->shader.ProgramID);
+			current_mesh_set.meshes[LEFT_WHEEL].render(this->shader.ProgramID);
+			current_mesh_set.meshes[RIGHT_WHEEL].render(this->shader.ProgramID);
+			current_mesh_set.meshes[LEFT_DOWN_FLAP].render(this->shader.ProgramID);
+			current_mesh_set.meshes[LEFT_UP_FLAP].render(this->shader.ProgramID);
+			current_mesh_set.meshes[RITGHT_DOWN_FLAP].render(this->shader.ProgramID);
+			current_mesh_set.meshes[RITGHT_UP_FLAP].render(this->shader.ProgramID);
+			current_mesh_set.meshes[GUN].render(this->shader.ProgramID);
+	}
+	else {
+		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
+			glPushMatrix();
+			glRotatef(RandFloat() * 60, RandFloat(), RandFloat(), RandFloat());
+			glTranslatef(RandFloat() * 5, RandFloat() * 5, RandFloat() * 5);
+			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+			current_mesh_set.meshes[i].render(this->shader.ProgramID);
+			glPopMatrix();
+		}
+	}
 	glPopMatrix();
 }
 

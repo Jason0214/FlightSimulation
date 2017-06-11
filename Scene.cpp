@@ -94,7 +94,7 @@ void Scene::RenderFrame(const Shader & frame_shader)const{
 				ptr->second->instance->RenderFrame(1, ptr->second->model_mat, frame_shader);
 		}
 	}
-	if (this->plane)
+	if (this->plane && !this->plane->is_crash)
 		this->plane->RenderFrame(frame_shader);
 }
 
@@ -152,7 +152,7 @@ void Scene::CheckCollision() const{
 	}
 	if (this->plane->position.x() <= 100.0f || this->plane->position.x() >=1900.0f ||
 		this->plane->position.z() <= 100.0f || this->plane->position.z() >=1900.0f) throw WarningBoard();
-	else if (this->plane->position.x() <= 20.0f || this->plane->position.x() >= 1980.0f ||
+	if (this->plane->position.x() <= 20.0f || this->plane->position.x() >= 1980.0f ||
 		this->plane->position.z() <= 20.0f || this->plane->position.z() >= 1980.0f) throw ReachBoard();
 }
 
@@ -172,7 +172,6 @@ bool Scene::OBBdetection(Wrapper & a, Wrapper & b) const{
 			if (project > b_max) b_max = project;
 			if (project < b_min) b_min = project;
 		}
-		cout << a_max << " " << a_min << " " << b_max << " " << b_min << endl;
 		if (b_max < a_min || b_min > a_max) return false;
 	}
 	for (normal_ptr = a.FaceNormal.begin(); normal_ptr != a.FaceNormal.end(); normal_ptr++) {
