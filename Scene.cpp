@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "Exception.h"
 
 #define FRUSTUM_NEAR (0.5f)
 #define FRUSTUM_RATIO (500)
@@ -11,38 +12,38 @@ Scene::Scene(int frustum_num){
 	this->object_num = 0;
 	this->background = NULL;
 	this->plane = NULL;
-	this->dist_order_dict = new map<GLfloat, PositionListNode*>[this->frustum_num];
-	memset(this->object_map, NULL, GRID_NUM * GRID_NUM * sizeof(InstanceListNode*));
+	this->dist_order_dict = new map<GLfloat, ListNode*>[this->frustum_num];
+	memset(this->object_map, NULL, MAP_SIDE_NUM *MAP_SIDE_NUM * sizeof(ListNode*));
 }
 
 void Scene::AppendObject(vec3 & position, StaticModel* instance, vec3 & rotate, float angle){
-	PositionListNode* new_ptr_1 = new PositionListNode(position, instance, rotate, angle);
+	ListNode* list_ptr = new ListNode(position, instance, rotate, angle);
 
 	if (this->object_list) {
-		PositionListNode* ptr_temp = this->object_list->next;
-		this->object_list->next = new_ptr_1;
-		new_ptr_1->next = ptr_temp;
+		ListNode* ptr_temp = this->object_list->next;
+		this->object_list->next = list_ptr;
+		list_ptr->next = ptr_temp;
 	}
 	else {
-		this->object_list = new_ptr_1;
+		this->object_list = list_ptr;
 	}
 
-	InstanceListNode* new_ptr_2 = new InstanceListNode(instance);
-	unsigned int i = position.x() / GRID_LEN, j = position.z() / GRID_LEN;
+	ListNode* map_ptr = new ListNode(position, instance, rotate, angle);
+	unsigned int i = (unsigned int)(position.x() / MAP_SIDE_LEN), j = (unsigned int)(position.z() /MAP_SIDE_LEN);
 	if(this->object_map[i][j]){
-		InstanceListNode* ptr_temp = this->object_map[i][j]->next;
-		this->object_map[i][j]->next = new_ptr_2;
-		new_ptr_2->next = ptr_temp;
+		ListNode* ptr_temp = this->object_map[i][j]->next;
+		this->object_map[i][j]->next = map_ptr;
+		map_ptr->next = ptr_temp;
 	}
 	else{
-		this->object_map[i][j] = new_ptr_2;
+		this->object_map[i][j] = map_ptr;
 	}
 	this->object_num++;
 }
 
 void Scene::Arrange(const vec3 & camera_front,const vec3 & camera_position){
-	for (PositionListNode* ptr = this->object_list; ptr != NULL; ptr = ptr->next) {
-		float distance = camera_front*(ptr->position - camera_position);
+	for (ListNode* ptr = this->object_list; ptr != NULL; ptr = ptr->next) {
+		float distance = normalize(camera_front)*(ptr->position - camera_position);
 		// group all the object into different frustum according there distance to the camera
 			for (int i = 0; i < this->frustum_num; i++) {
 				if (FRUSTUM_NEAR * Power(FRUSTUM_RATIO, i) <= distance && distance < FRUSTUM_NEAR * Power(FRUSTUM_RATIO, i + 1)) {
@@ -68,11 +69,13 @@ void Scene::ReProject(int level_index) const{
 
 void Scene::RenderAll(const LightSrc & sun, const DepthMap & depth_buffer)const{
 // draw objects from far to near in order to fit with alpha value
-	this->CheckCollision();
 	for (int i = this->frustum_num - 1; i >= 0; i--) {
 		this->ReProject(i); // change frustum and clear depth
-		for (map<float, PositionListNode*>::const_iterator ptr = this->dist_order_dict[i].begin(); ptr != this->dist_order_dict[i].end(); ptr++) {
-			ptr->second->instance->Render(ptr->second->position, 0, ptr->second->pivot,ptr->second->angle, sun, depth_buffer);
+		for (map<float, ListNode*>::const_iterator ptr = this->dist_order_dict[i].begin(); ptr != this->dist_order_dict[i].end(); ptr++) {
+			if(ptr->first < 50.0f)
+				ptr->second->instance->Render(0, ptr->second->model_mat, sun, depth_buffer);
+			else
+				ptr->second->instance->Render(1, ptr->second->model_mat, sun, depth_buffer);
 		}
 		if (this->background)
 			this->background->Render(sun, depth_buffer);
@@ -84,8 +87,11 @@ void Scene::RenderAll(const LightSrc & sun, const DepthMap & depth_buffer)const{
 void Scene::RenderFrame(const Shader & frame_shader)const{
 	frame_shader.Use();
 	for (int i = this->frustum_num - 1; i >= 0; i--) {
-		for (map<float, PositionListNode*>::const_iterator ptr = this->dist_order_dict[i].begin(); ptr != this->dist_order_dict[i].end(); ptr++) {
-			ptr->second->instance->RenderFrame(ptr->second->position, 0, ptr->second->pivot, ptr->second->angle, frame_shader);
+		for (map<float, ListNode*>::const_iterator ptr = this->dist_order_dict[i].begin(); ptr != this->dist_order_dict[i].end(); ptr++) {
+			if(ptr->first < 50.0f)
+				ptr->second->instance->RenderFrame(0, ptr->second->model_mat, frame_shader);
+			else
+				ptr->second->instance->RenderFrame(1, ptr->second->model_mat, frame_shader);
 		}
 	}
 	if (this->plane)
@@ -93,43 +99,50 @@ void Scene::RenderFrame(const Shader & frame_shader)const{
 }
 
 void Scene::CheckCollision() const{
-	int flag = 0;
+	GLfloat buf[16];
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	this->plane->Translate();
+	glGetFloatv(GL_MODELVIEW_MATRIX, buf);
+	glPopMatrix();
+	mat4 translate_mat(buf);
+	Wrapper* plane_wrappers = new Wrapper[this->plane->wrapper_num];
+	for (unsigned int i = 0; i < this->plane->wrapper_num; i++) {
+		plane_wrappers[i] = this->plane->wrappers[i].Translate(translate_mat);
+	}
 	if (!plane->is_land) {
 	// check plane above the terrain
-		for (unsigned i = 0; i < this->plane->wrapper_num; i++) {
-			for (vector<vec3>::iterator ptr = this->plane->wrappers[i].Vertices.begin(); ptr != this->plane->wrappers[i].Vertices.end(); ptr++) {
-				int i = floor(ptr->x()), j = floor(ptr->z());
-				if (ptr->y() <= this->background->grid[i][j]) {
-					if (i >= this->background->airport_x_min && i <= this->background->airport_x_max
-						&& j >= this->background->airport_z_min && j <= this->background->airprt_z_min
-						&& abs((int)this->plane->yaw) < 5 && abs((int)this->plane->roll) < 5 
-						&& abs((int)this->plane->pitch) < 5){
+		int yaw_abs = abs((int)this->plane->yaw);
+		int roll_abs = abs((int)this->plane->roll);
+		int pitch_abs = abs((int)this->plane->pitch);
+		
+		for (unsigned int k = 0; k < this->plane->wrapper_num; k++) {
+			for (vector<vec3>::iterator ptr = plane_wrappers[k].Vertices.begin(); ptr != plane_wrappers[k].Vertices.end(); ptr++) {
+				if (ptr->y() <= this->background->GetHeight(ptr->x(), ptr->z())) {
+					if (this->background->IsInAirport(ptr->x(),ptr->z()) && yaw_abs < 5 && roll_abs < 5 && pitch_abs < 5){
 						this->plane->is_land = true;
-						this->plane->yaw = 0.0f;
-						this->plane->roll = 0.0f;
-						this->plane->pitch = 0.0f;
+						this->plane->YawBack();
+						this->plane->RollBack();
+						this->plane->PitchBack();
 						return;
 					}
 					else {
 						throw Collision();
 					}
 				}
-				else if (i < 50 || i > 950 || j < 50 || j > 950) {
-					flag = 1;
-				}
-				else if (i < 10 || i > 990 || j < 10 || j > 990) {
-					flag = 2;
-				}
 			}
 		}
 	}
-	int x = this->plane->position.x()/GRID_LEN, z = this->plane->position.z()/GRID_LEN;
+	int x = (int)(this->plane->position.x()/MAP_SIDE_LEN), z = (int)(this->plane->position.z()/MAP_SIDE_LEN);
 	for (int i = x - 2; i < x + 2; i++) {
 		for (int j = z - 2; j < z + 2; j++) {
-			for (InstanceListNode* ptr = this->object_map[i][j]; ptr != NULL; ptr = ptr->next) {
-				for (int k = 0; k < ptr->instance->wrapper_num; k++) {
-					for (int v = 0; v < this->plane->wrapper_num; v++) {
-						if (OBBdetection(ptr->instance->wrappers[k], this->plane->wrappers[v])) {
+			for (ListNode* ptr = this->object_map[i][j]; ptr != NULL; ptr = ptr->next) {
+				int k_num = ptr->instance->wrapper_num;
+				int v_num = this->plane->wrapper_num;
+				for (int k = 0; k < k_num; k++) {
+					for (int v = 0; v < v_num; v++) {
+						if (OBBdetection(plane_wrappers[v], ptr->instance->wrappers[k].Translate(mat4(ptr->model_mat)))) {
 							throw Collision();
 						}
 					}
@@ -137,21 +150,61 @@ void Scene::CheckCollision() const{
 			}
 		}
 	}
-	if (flag == 1) throw WarningBoard();
-	if (flag == 2) throw ReachBoard();
+	if (this->plane->position.x() <= 100.0f || this->plane->position.x() >=1900.0f ||
+		this->plane->position.z() <= 100.0f || this->plane->position.z() >=1900.0f) throw WarningBoard();
+	else if (this->plane->position.x() <= 20.0f || this->plane->position.x() >= 1980.0f ||
+		this->plane->position.z() <= 20.0f || this->plane->position.z() >= 1980.0f) throw ReachBoard();
+}
+
+bool Scene::OBBdetection(Wrapper & a, Wrapper & b) const{
+	vector<vec3>::const_iterator normal_ptr;
+	for (normal_ptr = b.FaceNormal.begin(); normal_ptr != b.FaceNormal.end(); normal_ptr++) {
+		float a_min = INFINITY, a_max = -INFINITY, project;
+		float b_min = INFINITY, b_max = -INFINITY;
+		vector<vec3>::const_iterator vertex_ptr;
+		for (vertex_ptr = a.Vertices.begin(); vertex_ptr != a.Vertices.end(); vertex_ptr++) {
+			project = (*normal_ptr) * (*vertex_ptr);
+			if (project > a_max) a_max = project;
+			if (project < a_min) a_min = project;
+		}
+		for (vertex_ptr = b.Vertices.begin(); vertex_ptr != b.Vertices.end(); vertex_ptr++) {
+			project = (*normal_ptr) * (*vertex_ptr);
+			if (project > b_max) b_max = project;
+			if (project < b_min) b_min = project;
+		}
+		cout << a_max << " " << a_min << " " << b_max << " " << b_min << endl;
+		if (b_max < a_min || b_min > a_max) return false;
+	}
+	for (normal_ptr = a.FaceNormal.begin(); normal_ptr != a.FaceNormal.end(); normal_ptr++) {
+		float a_min = INFINITY, a_max = -INFINITY, project;
+		float b_min = INFINITY, b_max = -INFINITY;
+		vector<vec3>::const_iterator vertex_ptr;
+		for (vertex_ptr = a.Vertices.begin(); vertex_ptr != a.Vertices.end(); vertex_ptr++) {
+			project = (*normal_ptr) * (*vertex_ptr);
+			if (project > a_max) a_max = project;
+			if (project < a_min) a_min = project;
+		}
+		for (vertex_ptr = b.Vertices.begin(); vertex_ptr != b.Vertices.end(); vertex_ptr++) {
+			project = (*normal_ptr) * (*vertex_ptr);
+			if (project > b_max) b_max = project;
+			if (project < b_min) b_min = project;
+		}
+		if (b_max < a_min || b_min > a_max) return false;
+	}
+	return true;
 }
 
 void Scene::FreeAll(){
-	PositionListNode* p = this->object_list,*q;
+	ListNode* p = this->object_list,*q;
 	while (p) {
 		q = p->next;
 		delete p;
 		p = q;
 	}
 
-	for (unsigned int i = 0; i < GRID_NUM; i++) {
-		for (unsigned int j = 0; j < GRID_NUM; j++) {
-			InstanceListNode* p = this->object_map[i][j],*q = NULL;
+	for (unsigned int i = 0; i < MAP_SIDE_NUM; i++) {
+		for (unsigned int j = 0; j < MAP_SIDE_NUM; j++) {
+			ListNode* p = this->object_map[i][j],*q = NULL;
 			while (p) {
 				q = p->next;
 				delete p;

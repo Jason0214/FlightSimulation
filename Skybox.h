@@ -12,12 +12,13 @@
 #endif
 
 #include "Shader.h"
+#include <string>
 
 class SkyBox {
 public:
 	SkyBox();
 	~SkyBox();
-	void LoadTexture(const char *pic_path[], unsigned int pic_num = 6);
+	void LoadTexture(std::string pic_path[], unsigned int pic_num = 6);
 	void DeployTexture();
 	void Draw(GLfloat camera_x = 0.0f, GLfloat camera_y = 0.0f, GLfloat camera_z = 0.0f);
 	GLuint VAO;

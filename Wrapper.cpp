@@ -27,19 +27,28 @@ void Wrapper::InitWrapper(Wrapper & wrapper,const std::string file_name){
 		}
 		else if (buf == "f") {
 			getline(fin, buf);
+			vec3 normal;
 			stringstream line(buf);
-			Face face;
 			while (line >> buf) {
 				size_t slash_index_1 = buf.find('/', 0);
 				size_t slash_index_2 = buf.find('/', slash_index_1 + 1);
-				face.v_index.push_back(stoi(buf.substr(0, slash_index_1)));
-				face.normal += vNormal[stoi(buf.substr(slash_index_2))];
+				normal += normalize(vNormal[stoi(buf.substr(slash_index_2+1))]);
 			}
-			face.normal = normalize(face.normal);
-			wrapper.Faces.push_back(face);
+			wrapper.FaceNormal.push_back(normalize(normal));
 		}
 		else {
 			getline(fin, buf);
 		}
 	}
+}
+
+Wrapper Wrapper::Translate(mat4 matrix) {
+	Wrapper ret;
+	for (vector<vec3>::const_iterator ptr = this->Vertices.begin(); ptr != this->Vertices.end(); ptr++) {
+		ret.Vertices.push_back(vec3(matrix * vec4((*ptr)[0], (*ptr)[1], (*ptr)[2], 1.0f)));
+	}
+	for (vector<vec3>::const_iterator ptr = this->FaceNormal.begin(); ptr != this->FaceNormal.end(); ptr++) {
+		ret.FaceNormal.push_back(vec3(matrix * vec4((*ptr)[0], (*ptr)[1], (*ptr)[2], 1.0f)));
+	}
+	return ret;
 }

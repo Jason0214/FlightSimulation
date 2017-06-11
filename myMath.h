@@ -9,6 +9,9 @@ float aTan(float );
 
 float Power(float x, int exp);
 
+// return float (-1,1)
+float RandFloat();
+
 class vec4 {
 public:
 	vec4(float x = 0.0f, float y = 0.0f, float z = 0.0f, float w = 0.0f) {
@@ -40,7 +43,7 @@ public:
 		return *this * (1/k);
 	}
 	vec4 operator+ (const vec4 & v) const;
-	vec4 operator+=(const vec4 & v);
+	vec4 & operator+=(const vec4 & v);
 	vec4 operator- (const vec4 & v) const;
 	vec4 operator-() const{return vec4(0.0f,0.0f,0.0f,0.0f) - *this;};	
 	float operator* (const vec4 & v) const;
@@ -87,7 +90,7 @@ public:
 		return *this * (1/k);
 	}	
 	vec3 operator+ (const vec3 & v) const;
-	vec3 operator+=(const vec3 & v);
+	vec3 & operator+=(const vec3 & v);
 	vec3 operator- (const vec3 & v) const;
 	vec3 operator-() const{return vec3(0.0f,0.0f,0.0f) - *this;}
 	float operator* (const vec3 & v) const;
@@ -125,7 +128,7 @@ public:
 		return *this * (1/k);
 	}		
 	vec2 operator+ (const vec2 & v) const;
-	vec2 operator+=(const vec2 & v);
+	vec2 & operator+=(const vec2 & v);
 	vec2 operator- (const vec2 & v) const;
 	vec2 operator-() const{return vec2(0.0f,0.0f) - *this;};
 	float operator* (const vec2 & v) const;
@@ -150,9 +153,9 @@ float module(const vec4 & v1);
 
 class mat3{
 /*
-	0 1 2
-	3 4 5
-	6 7 8
+	0 3 6
+	1 4 7
+	2 5 8
 */
 public:
 	mat3(){
@@ -172,31 +175,24 @@ private:
 	float value[16];	
 };
 
-//class mat4{
-///*
-//	0 1 2 3
-//	4 5 6 7
-//	8 9 ...
-//	.......
-//*/
-//public:
-//	mat4(){
-//		memset(this->value,0,sizeof(float)*16);
-//		for(int i = 0; i < 3; i++){
-//			this->value[i][i] = 1;
-//		}
-//	}
-//	mat4(const float* array){
-//		for(int i = 0; i < 16; i++){
-//			this->value[i] = array[i];
-//		}
-//	}
-//	float* operator[](int index){
-//		return (float*)(&(this->value[index*4]));
-//	}
-//private:
-//	float value[16];
-//};
-
-
-mat3 inverse(const mat3 & m);
+class mat4{
+/*
+	0 4 8.. 
+	1 5 9..
+	2 6 ...
+	3 7 ...
+*/
+public:
+	mat4(){
+		memset(this->value,0,sizeof(float)*16);
+	}
+	mat4(const float* array){
+		memcpy(this->value, array, sizeof(float) * 16);
+	}
+	float* operator[](int index){
+		return (float*)(&(this->value[index*4]));
+	}
+	vec4 operator*(const vec4 & v);
+private:
+	float value[16];
+};

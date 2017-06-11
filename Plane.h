@@ -11,9 +11,11 @@ public:
 
 	bool is_land;
 	vec3 position;
+	vec3 origin;
 	vec3 front;
 	vec3 up;
 	GLfloat posture_mat[16];
+	GLfloat fan_spin;
 
 	//	counter_clock_wise
 	GLfloat yaw;	//Æ«º½½Ç
@@ -21,6 +23,9 @@ public:
 	GLfloat roll;   //¹ö×ª½Ç
 	GLfloat throttle;
 	GLfloat speed;
+
+	void init();
+
 	void RollLeft();
 	void RollRight();
 	void RollBack();
@@ -29,9 +34,13 @@ public:
 	void YawBack();
 	void PitchUp();
 	void PitchDown();
-	void Forward();
+	void PitchBack();
+
 	void SpeedUp();
 	void SpeedDown();
+
+	void Forward();
+	void Translate()const;
 
 	vec3 View() {
 		vec3 temp = this->position - normalize(vec3(this->front.x(),0.0f,this->front.z()))*12.0f;

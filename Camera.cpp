@@ -3,7 +3,7 @@
 Camera::Camera(float x, float y, float z):position(x, y, z),front(1.0f,0.0f,0.0f),up(0.0f,1.0f,0.0f){
 	this->yaw = -90.0;
 	this->pitch = 0.0;
-	this->move_speed = 5.0f;
+	this->move_speed = 1.5f;
 }
 
 void Camera::moveleft() {

@@ -34,3 +34,17 @@ public:
 	std::string Info() const { return "shader compile error: "+error_info; }
 	std::string error_info;
 };
+
+class GameException : public Exception {};
+
+class Collision :public GameException {
+
+};
+
+class WarningBoard: public GameException {
+
+};
+
+class ReachBoard : public GameException {
+
+};

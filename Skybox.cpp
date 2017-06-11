@@ -9,13 +9,13 @@ SkyBox::~SkyBox() {
 	glDeleteBuffers(1,&(this->VAO));
 }
 
-void SkyBox::LoadTexture(const char *pic_path[], unsigned int pic_num) {
+void SkyBox::LoadTexture(std::string pic_path[], unsigned int pic_num) {
 	glGenTextures(1, &this->TextureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, this->TextureID);
 	int width, height;
 	unsigned char* image = NULL;
 	for (unsigned int i = 0; i < pic_num; i++) {
-		image = SOIL_load_image(pic_path[i], &width, &height, 0, SOIL_LOAD_RGBA);
+		image = SOIL_load_image(pic_path[i].c_str(), &width, &height, 0, SOIL_LOAD_RGBA);
 		if (!image) throw LoadFileError(pic_path[i]);
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 	//	glGenerateMipmap(GL_TEXTURE_2D);

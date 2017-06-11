@@ -18,6 +18,20 @@ float Power(float x, int exp){
 	return res;
 }
 
+float RandFloat() {
+	// reference: https://www.zhihu.com/question/25037345
+	union {
+		float f;
+		unsigned int u;
+	}ret;
+	int temp = rand();
+	ret.u = (temp%2) << 31;
+	//	1 8 23
+	ret.u += (126 << 23);
+	ret.u += ((temp % (1 << 24)) >> 1);
+	return ret.f;
+}
+
 static inline void _subtract(float* des,const float* src1,const float* src2, int len) {
 	for (int i = 0; i < len; i++) {
 		des[i] = src1[i] - src2[i];
@@ -74,8 +88,9 @@ vec2 vec2::operator+ (const vec2 & v) const {
 	return ret;
 }
 
-vec2 vec2::operator+=(const vec2 & v) {
+vec2 & vec2::operator+=(const vec2 & v) {
 	_add(this->data(), this->data(), v.data(), 2);
+	return *this;
 }
 
 vec2 vec2::operator- (const vec2 & v) const {
@@ -104,8 +119,9 @@ vec3 vec3::operator+ (const vec3 & v) const {
 	return ret;
 }
 
-vec3 vec3::operator+=(const vec3 & v){
+vec3 & vec3::operator+=(const vec3 & v){
 	_add(this->data(), this->data(), v.data(), 3);
+	return *this;
 }
 
 vec3 vec3::operator- (const vec3 & v) const {
@@ -133,8 +149,9 @@ vec4 vec4::operator+ (const vec4 & v) const {
 	_add(ret.data(), this->data(), v.data(), 4);
 	return ret;
 }
-vec4 vec4::operator+=(const vec4 & v) {
+vec4 & vec4::operator+=(const vec4 & v) {
 	_add(this->data(), this->data(), v.data(), 4);
+	return *this;
 }
 vec4 vec4::operator- (const vec4 & v) const {
 	vec4 ret;
@@ -213,3 +230,13 @@ mat3 & mat3::operator+(const mat3 & m){
 	return ret;
 }
 
+vec4 mat4::operator*(const vec4 & v) {
+	vec4 ret;
+	for (int i = 0; i < 4; i++) {
+		ret[i] = 0;
+		for (int j = 0; j < 4; j++) {
+			ret[i] += this->value[j * 4 + i] * v[j];
+		}
+	}
+	return ret;
+}

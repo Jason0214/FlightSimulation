@@ -111,60 +111,54 @@ void Model::Load(string path, unsigned int level_index) {
 	import.FreeScene();
 }
 
-void StaticModel::Translate(vec3 & position, vec3 pivot, float angle) const{
-	glTranslatef(position.x(), position.y(), position.z());
-	if (angle != 0.0f)
-		glRotatef(angle, pivot[0], pivot[1], pivot[2]);
-}
-
-void StaticModel::Render(vec3 & position, unsigned int level_index, vec3 & pivot, float angle, const LightSrc & sun, const DepthMap & depth_buffer) const{
+void StaticModel::Render(unsigned int level_index,const GLfloat* model_mat, const LightSrc & sun, const DepthMap & depth_buffer) const{
 	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
 	GLfloat matrix_buf[16];
-	this->Translate(position, pivot, angle);
-// select shader program
-	this->shader.Use();
-// move to the position in world coordicate
-	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
-	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-// pass in light space matrices
 	glPushMatrix();
-		glLoadMatrixf(depth_buffer.light_space_view);
-		this->Translate(position, pivot, angle);
+		glMultMatrixf(model_mat);
+	// select shader program
+		this->shader.Use();
+	// move to the position in world coordicate
+		glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
+		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view"), 1, GL_FALSE, matrix_buf);
-	glPopMatrix();
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_projection"), 1, GL_FALSE, depth_buffer.light_space_project);
-// pass in shadow texture
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, depth_buffer.depth_textureID);
-	glUniform1i(glGetUniformLocation(this->shader.ProgramID, "depth_map"), 0);
-// pass in light param
-	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
-	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);
-	// draw every mesh
-	MeshData & current_mesh_set = this->data[level_index];
-	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
-		current_mesh_set.meshes[i].render(this->shader.ProgramID);
-	}
+		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+	// pass in light space matrices
+		glPushMatrix();
+			glLoadMatrixf(depth_buffer.light_space_view);
+			glMultMatrixf(model_mat);		
+			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view"), 1, GL_FALSE, matrix_buf);
+		glPopMatrix();
+		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_projection"), 1, GL_FALSE, depth_buffer.light_space_project);
+	// pass in shadow texture
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, depth_buffer.depth_textureID);
+		glUniform1i(glGetUniformLocation(this->shader.ProgramID, "depth_map"), 0);
+	// pass in light param
+		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
+		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);
+		// draw every mesh
+		MeshData & current_mesh_set = this->data[level_index];
+		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
+			current_mesh_set.meshes[i].render(this->shader.ProgramID);
+		}
 	glPopMatrix();
 }
 
-void StaticModel::RenderFrame(vec3 & position, unsigned int level_index, vec3 & pivot, float angle,const Shader & frame_shader) const {
+void StaticModel::RenderFrame(unsigned int level_index,const GLfloat* model_mat,const Shader & frame_shader) const {
 	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
 	GLfloat matrix_buf[16];
-	this->Translate(position, pivot, angle);
-	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
-	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
-	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-	// draw every mesh
-	MeshData & current_mesh_set = this->data[level_index];
-	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
-		current_mesh_set.meshes[i].render(this->shader.ProgramID);
-	}
+	glPushMatrix();
+		glMultMatrixf(model_mat);
+		glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
+		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
+		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+		// draw every mesh
+		MeshData & current_mesh_set = this->data[level_index];
+		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
+			current_mesh_set.meshes[i].render(this->shader.ProgramID);
+		}
 	glPopMatrix();
 }

@@ -28,7 +28,7 @@ typedef struct mesh_data_struct {
 
 class Model {
 public:
-	Model(GLenum type, unsigned int level_num = 1):draw_type(type),wrapper(NULL),level_num(level_num){
+	Model(GLenum type, unsigned int level_num = 1):draw_type(type),wrappers(NULL),level_num(level_num){
 		this->data = new MeshData[this->level_num];
 		for (unsigned int i = 0; i < this->level_num; i++) {
 			this->data[i].meshes = NULL;
@@ -43,11 +43,11 @@ public:
 		delete this->wrappers;
 	}
 	void Model::LoadWrapper(std::string* filelist,unsigned int wrapper_number) {
-		this->wrappers = new Wrapper[wrapper_num];
+		this->wrapper_num = wrapper_number;
+		this->wrappers = new Wrapper[this->wrapper_num];
 		for (unsigned int i = 0; i < wrapper_num; i++) {
 			Wrapper::InitWrapper(this->wrappers[i],filelist[i]);
 		}
-
 	}
 	void Load(std::string path, unsigned int level_index = 0);
 
@@ -69,10 +69,10 @@ protected:
 
 class StaticModel:public Model {
 public:
-	StaticModel():Model(GL_STATIC_DRAW){}
+	StaticModel():Model(GL_STATIC_DRAW, 2){}
 	~StaticModel(){}
-	virtual void Render(vec3 & position, unsigned int level_index, vec3 & pivot, float angle, const LightSrc & light, const DepthMap & depth_buffer) const;
-	virtual void RenderFrame(vec3 & position, unsigned int level_index, vec3 & pivot, float angle, const Shader & frame_shader) const;
+	virtual void Render(unsigned int level_index, const GLfloat*, const LightSrc & light, const DepthMap & depth_buffer) const;
+	virtual void RenderFrame(unsigned int level_index, const GLfloat*, const Shader & frame_shader) const;
 protected:
-	void Translate(vec3 & position, vec3 pivot, float angle) const;
+
 };

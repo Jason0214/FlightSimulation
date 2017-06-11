@@ -7,24 +7,32 @@
 #include "Plane.h"
 #include <map>
 
-class PositionListNode{
-public:
-	PositionListNode(const vec3 & position, StaticModel* instance, const vec3 & pivot, float angle)
-			:next(NULL),position(position),instance(instance),pivot(pivot),angle(angle){}
-	~PositionListNode() {}
-	vec3 position;
-	vec3 pivot;
-	float angle;
-	StaticModel* instance;
-	PositionListNode* next;
-};
+#define MAP_SIDE_LEN  2
+#define MAP_SIDE_NUM 1000
+#define SCENE_LEN (2000.0f)
 
-class InstanceListNode {
+class ListNode{
 public:
-	InstanceListNode(StaticModel* instance):instance(instance),next(NULL){}
-	~InstanceListNode() {};
+	ListNode(const vec3 & position, StaticModel* instance, const vec3 & pivot, float angle)
+		:next(NULL),position(position),instance(instance){
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+		glTranslatef(position[0], position[1], position[2]);
+		if (angle != 0.0f)
+			glRotatef(angle, pivot[0], pivot[1], pivot[2]);
+		glGetFloatv(GL_MODELVIEW_MATRIX, this->model_mat);
+		glPushMatrix();
+	}
+	ListNode(const ListNode & node):next(NULL),position(node.position) {
+		this->instance = node.instance;
+		memcpy(this->model_mat, node.model_mat, 16 * sizeof(GLfloat));
+	}
+	~ListNode() {}
+	GLfloat model_mat[16];
+	vec3 position;
 	StaticModel* instance;
-	InstanceListNode* next;
+	ListNode* next;
 };
 
 class Scene{
@@ -46,6 +54,7 @@ public:
 	void RenderFrame(const Shader & frame_shader)const;
 
 	void CheckCollision() const;
+	bool OBBdetection(Wrapper & a, Wrapper & b)const;
 
 	BackGround* background;
 	PlaneModel* plane;
@@ -55,7 +64,7 @@ public:
 private:
 	int frustum_num;
 	int object_num;
-	PositionListNode* object_list;
-	InstanceListNode* object_map[GRID_NUM][GRID_NUM];
-	std::map<GLfloat,PositionListNode*>* dist_order_dict;  //XXX: better to be self-built
+	ListNode* object_list;
+	ListNode* object_map[MAP_SIDE_NUM][MAP_SIDE_NUM];
+	std::map<GLfloat,ListNode*>* dist_order_dict;  //XXX: better to be self-built
 };
