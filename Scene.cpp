@@ -120,7 +120,7 @@ void Scene::CheckCollision() const{
 		for (unsigned int k = 0; k < this->plane->wrapper_num; k++) {
 			for (vector<vec3>::iterator ptr = plane_wrappers[k].Vertices.begin(); ptr != plane_wrappers[k].Vertices.end(); ptr++) {
 				if (ptr->y() <= this->background->GetHeight(ptr->x(), ptr->z())) {
-					if (this->background->IsInAirport(ptr->x(),ptr->z()) && yaw_abs < 5 && roll_abs < 5 && pitch_abs < 5){
+					if (this->background->IsInAirport(ptr->x(),ptr->z()) && yaw_abs < 10 && roll_abs < 10 && pitch_abs < 10){
 						this->plane->is_land = true;
 						this->plane->YawBack();
 						this->plane->RollBack();

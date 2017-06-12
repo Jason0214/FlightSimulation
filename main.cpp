@@ -33,6 +33,9 @@ using namespace std;
 #define CAMERA 2
 #define PLANE 1
 #define STOP 0
+
+#define COLLISION_FREQUENCY 300
+#define FRAME_FREQUENCY 20
 GLuint STATUS;
 
 Camera camera(923.0f, 50.0f, 1000.0f);
@@ -95,18 +98,22 @@ static void init() {
 
 		// init tree model
 		Shader tree_shader;
-		string tree_wrapper_path[2] = { "./assets/wrapper/Ctrl_tree_up.obj","./assets/wrapper/Ctrl_tree_down.obj"};
+		string tree_small_wrapper_path[2] = { "./assets/wrapper/Ctrl_tree_small_up.obj","./assets/wrapper/Ctrl_tree_down.obj"};
+		string tree_big_wrapper_path[2] = { "./assets/wrapper/Ctrl_tree_big_up.obj","./assets/wrapper/Ctrl_tree_down.obj" };
 		tree_shader.LoadShader("./shaders/tree_shader.vs", "./shaders/tree_shader.frag");
 		for (unsigned int i = 0; i < 4; i++) {
 			tree[i] = new StaticModel();
 			tree[i]->shader = tree_shader;
 			tree[i]->Load("./assets/tree/tree_low.obj", 1);
-			tree[i]->LoadWrapper(tree_wrapper_path, 2);
 		}
 		tree[0]->Load("./assets/tree/OC26_2.obj");
+		tree[0]->LoadWrapper(tree_small_wrapper_path, 2);
 		tree[1]->Load("./assets/tree/OC26_3.obj");
+		tree[1]->LoadWrapper(tree_small_wrapper_path, 2);
 		tree[2]->Load("./assets/tree/OC26_4.obj");
+		tree[2]->LoadWrapper(tree_small_wrapper_path, 2);
 		tree[3]->Load("./assets/tree/OC26_8.obj");
+		tree[3]->LoadWrapper(tree_big_wrapper_path, 2);
 
 		Shader mountain_shader;
 		mountain_shader.LoadShader("./shaders/background_shader.vs", "./shaders/background_shader.frag");
@@ -114,10 +121,10 @@ static void init() {
 		mountain->Load("./assets/terrain/mountains_4.obj");
 		mountain->shader = mountain_shader;
 		mountain->LoadHeightData("./assets/terrain/mountain.hmp");
-		mountain->airport[0][0] = 490;
-		mountain->airport[0][1] = 500;
-		mountain->airport[1][0] = 530;
-		mountain->airport[1][1] = 550;
+		mountain->airport[0][0] = 465;
+		mountain->airport[0][1] = 485;
+		mountain->airport[1][0] = 550;
+		mountain->airport[1][1] = 510;
 
 		plane = new PlaneModel(vec3(935.0f, 0.0f, 1000.0f));
 		string plane_wrapper_path[6] = { "./assets/wrapper/Ctrl_body.obj","./assets/wrapper/Ctrl_propeller.obj",
@@ -211,8 +218,8 @@ int main(int argc, char* argv[]) {
 	glutSpecialUpFunc(SpecialKeyRelease);
 	glutPassiveMotionFunc(MouseMove);
 	glutEntryFunc(ResetMouse);
-	glutTimerFunc(20, Movement, PLANE);
-	glutTimerFunc(200, CollisionDetect, 1);
+	glutTimerFunc(FRAME_FREQUENCY, Movement, PLANE);
+	glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 1);
 	glutMainLoop();
 }
 
@@ -221,11 +228,11 @@ static void Movement(int timer_id) {
 		if (Key['0']) {
 			STATUS = PLANE;
 			plane->init();
-			glutTimerFunc(20, Movement, PLANE);
-			glutTimerFunc(200, CollisionDetect, 1);
+			glutTimerFunc(FRAME_FREQUENCY, Movement, PLANE);
+			glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 1);
 		}
 		else {
-			glutTimerFunc(20, Movement, STOP);
+			glutTimerFunc(FRAME_FREQUENCY, Movement, STOP);
 		}
 	}
 	else if (STATUS == PLANE) {
@@ -260,10 +267,10 @@ static void Movement(int timer_id) {
 		}
 
 		if (Key['C'] || Key['c']) {
-			glutTimerFunc(20, Movement, CAMERA);
+			glutTimerFunc(FRAME_FREQUENCY, Movement, CAMERA);
 		}
 		else {
-			glutTimerFunc(20, Movement, PLANE);
+			glutTimerFunc(FRAME_FREQUENCY, Movement, PLANE);
 		}
 		plane->Forward();
 		glutPostRedisplay();
@@ -283,10 +290,10 @@ static void Movement(int timer_id) {
 			camera.moveright();
 		}
 		if (Key['C'] || Key['c']) {
-			glutTimerFunc(20, Movement, CAMERA);
+			glutTimerFunc(FRAME_FREQUENCY, Movement, CAMERA);
 		}
 		else {
-			glutTimerFunc(20, Movement, PLANE);
+			glutTimerFunc(FRAME_FREQUENCY, Movement, PLANE);
 		}
 		glutPostRedisplay();
 	}
@@ -308,7 +315,7 @@ static void CollisionDetect(int timer_id) {
 		catch (const ReachBoard & e) {
 			plane->init();
 		}
-		glutTimerFunc(200, CollisionDetect, 1);
+		glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 1);
 	}
 }
 

@@ -28,6 +28,7 @@ void PlaneModel::init() {
 	this->roll = 0.0f;
 
 	this->speed = 0.0f;
+	this->throttle = 0.0f;
 	this->fan_spin = 0.0f;
 	
 	this->is_land = true;
@@ -224,7 +225,7 @@ void PlaneModel::Render(const LightSrc & light, const DepthMap & depth_buffer) c
 			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
 			current_mesh_set.meshes[FAN].render(this->shader.ProgramID);
 		glPopMatrix();
-		if (this->yaw != 0.0f) {
+		if (this->yaw > 5.0f || this->yaw < -5.0f) {
 			glPushMatrix();
 				glTranslatef(-2.524f, 0.425f, 0.028f);
 				glRotatef(this->yaw > 0.0f ? 45.0f : -45.0f, -0.208f, -0.978f, 0.0f);
@@ -235,11 +236,24 @@ void PlaneModel::Render(const LightSrc & light, const DepthMap & depth_buffer) c
 			glPopMatrix();
 		}
 		else {
+			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+			current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
+		}
+		if (this->pitch > 5.0f || this->pitch < -5.0f) {
 			glPushMatrix();
+				glTranslatef(-2.524f, 0.426f, 0.0f);
+				glRotatef(this->pitch > 0.0f ? 30.0f : -30.0f, 0.0f, 0.0f, 1.0f);
+				glTranslatef(2.524f, -0.426f, 0.0f);
 				glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 				glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-				current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
+				current_mesh_set.meshes[PITCH_FIN].render(this->shader.ProgramID);
 			glPopMatrix();
+		}
+		else {
+			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+			current_mesh_set.meshes[PITCH_FIN].render(this->shader.ProgramID);
 		}
 			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
@@ -257,7 +271,7 @@ void PlaneModel::Render(const LightSrc & light, const DepthMap & depth_buffer) c
 		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
 			glPushMatrix();
 			glRotatef(RandFloat() * 60, RandFloat(), RandFloat(), RandFloat());
-			glTranslatef(RandFloat() * 5, RandFloat() * 5, RandFloat() * 5);
+			glTranslatef(RandFloat() * 5, RandFloat(), RandFloat() * 5);
 			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
 			current_mesh_set.meshes[i].render(this->shader.ProgramID);
