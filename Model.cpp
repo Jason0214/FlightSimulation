@@ -55,7 +55,6 @@ vector<Texture> Model::LoadMeshMaterial(aiMaterial* material, aiTextureType type
 
 void Model::LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, string & directory) {
 	mesh.init(raw_mesh->mNumVertices, (raw_mesh->mNumFaces)*3); //level 0 is the original model
-//	cout << "v num:" << mesh.v_num << endl;
 	Vertex* vertices_ptr = mesh.GetVertexPtr();
 	GLuint* indices_ptr = mesh.GetIndexPtr();
 	for (unsigned int i = 0; i < raw_mesh->mNumVertices; i++) {
@@ -80,7 +79,6 @@ void Model::LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, st
 		aiFace face = raw_mesh->mFaces[i];
 		memcpy(&(indices_ptr[3*i]), face.mIndices, 3 * sizeof(GLuint));
 	}
-	// texture
 	if (raw_mesh->mMaterialIndex >= 0)
 	{
 		aiMaterial* material = scene->mMaterials[raw_mesh->mMaterialIndex];
@@ -101,10 +99,8 @@ void Model::Load(string path, unsigned int level_index) {
 	{
 		throw LoadModelError( "ERROR::ASSIMP::"+ string(import.GetErrorString()));
 	}
-// load mesh
 	current_mesh_set.mesh_num = scene->mNumMeshes;
 	current_mesh_set.meshes = new Mesh[current_mesh_set.mesh_num];
-//	cout << "mesh num:" << this->mesh_num << endl;
 	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
 		this->LoadMeshData(current_mesh_set.meshes[i],scene->mMeshes[i], scene, directory);
 	}
@@ -116,9 +112,7 @@ void StaticModel::Render(unsigned int level_index,const GLfloat* model_mat, cons
 	GLfloat matrix_buf[16];
 	glPushMatrix();
 		glMultMatrixf(model_mat);
-	// select shader program
 		this->shader.Use();
-	// move to the position in world coordicate
 		glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
 		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
@@ -138,7 +132,6 @@ void StaticModel::Render(unsigned int level_index,const GLfloat* model_mat, cons
 	// pass in light param
 		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
 		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);
-		// draw every mesh
 		MeshData & current_mesh_set = this->data[level_index];
 		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
 			current_mesh_set.meshes[i].render(this->shader.ProgramID);
@@ -155,7 +148,6 @@ void StaticModel::RenderFrame(unsigned int level_index,const GLfloat* model_mat,
 		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-		// draw every mesh
 		MeshData & current_mesh_set = this->data[level_index];
 		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
 			current_mesh_set.meshes[i].render(this->shader.ProgramID);

@@ -82,11 +82,6 @@ void PlaneModel::Forward() {
 		up_speed = 0.4 * this->speed * this->speed  - 0.02;
 	}
 	this->position = this->position + this->front * this->speed;
-
-	//if (!this->is_land) {
-	//	cout << RandFloat();
-	//	this->position += vec3(RandFloat(), RandFloat(), RandFloat());
-	//}
 }
 
 void PlaneModel::SpeedUp(){
@@ -216,6 +211,8 @@ void PlaneModel::Render(const LightSrc & light, const DepthMap & depth_buffer) c
 	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), light.color[0], light.color[1], light.color[2]);
 	glPushMatrix();
 	this->Translate();
+
+	// if the plane is crashed, randomly split the model
 	if (!this->is_crash) {
 		glPushMatrix();
 			glTranslatef(0.393f, 0.928f, 0.0f);
@@ -291,7 +288,6 @@ void PlaneModel::RenderFrame(const Shader & frame_shader) const {
 	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-	// draw every mesh
 	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
 		current_mesh_set.meshes[i].render_frame(frame_shader.ProgramID);
 	}

@@ -26,9 +26,20 @@ public:
 	Mesh(){};
 	~Mesh();
 	void init(unsigned int v_num, unsigned int i_num);
+
+	// generate openGL objects with raw data
 	void deploy(GLenum model_type);
+	
+	// render the mesh
+	// pay attention that projection&model_view matrix
+	// won't be set in this function, it is the job of
+	// class::Model
 	void render(GLuint program) const;
+
+	// only render the frame of mesh with no textures,
+	// used for generate shadow map
 	void render_frame(GLuint program)const;
+	
 	Vertex* GetVertexPtr() {
 		return this->vertices;
 	}

@@ -37,6 +37,7 @@ public:
 
 class GameException : public Exception {};
 
+
 class Collision :public GameException {
 
 };

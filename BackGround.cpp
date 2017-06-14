@@ -3,7 +3,6 @@
 #include <cstring>
 #include <fstream>
 
-#include <iostream>
 using namespace std;
 
 BackGround::BackGround() :StaticModel() {
@@ -20,7 +19,6 @@ void BackGround::LoadHeightData(const string & file_name) {
 	for (unsigned int i = 0; i < GRID_NUM; i++) {
 		for (unsigned int j = 0; j < GRID_NUM; j++) {
 			if (!fin) {
-				cout << i << " " << j;
 				throw LoadFileError(file_name);
 			}
 			fin >> this->grid[i][j];

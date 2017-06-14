@@ -18,7 +18,6 @@ void SkyBox::LoadTexture(std::string pic_path[], unsigned int pic_num) {
 		image = SOIL_load_image(pic_path[i].c_str(), &width, &height, 0, SOIL_LOAD_RGBA);
 		if (!image) throw LoadFileError(pic_path[i]);
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-	//	glGenerateMipmap(GL_TEXTURE_2D);
 		SOIL_free_image_data(image);
 		image = NULL;
 	}
@@ -31,8 +30,9 @@ void SkyBox::LoadTexture(std::string pic_path[], unsigned int pic_num) {
 }
 
 void SkyBox::DeployTexture() {
-	// XXX VEO can be used
-	GLfloat skybox_vertices[] = { //triangle
+	// list the vertexs of a cube
+	// use triangle faces
+	GLfloat skybox_vertices[] = { 
 		-1.0f,  1.0f, -1.0f,
 		-1.0f, -1.0f, -1.0f,
 		1.0f, -1.0f, -1.0f,
@@ -88,7 +88,7 @@ void SkyBox::DeployTexture() {
 	// if these vertexs hardly change， use static draw, otherwise dynamic
 	glBufferData(GL_ARRAY_BUFFER, sizeof(skybox_vertices), &skybox_vertices, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	/* 设置读取顶点数据的方式
+	/* tell openGL how to parse the data in buffer
 	param1 :  begin index
 	param2 :  number of components per point
 	param3 :  type
@@ -102,27 +102,21 @@ void SkyBox::DeployTexture() {
 void SkyBox::Draw(GLfloat camera_x, GLfloat camera_y, GLfloat camera_z) {
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	/* 将纹理移动到照相机的位置 */
+	// always move the skybox around the camera
 	glTranslatef(camera_x, camera_y, camera_z);
-	/* buffer 用于储存矩阵 */
 	GLfloat matrix_buf[16];
-	/* 使用天空盒的着色器 */
 	this->shader.Use();
-	/* 获得投影矩阵 并用uniform传入着色器 */
+	// get project&model_view matrix, pass it to GLSL program
 	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
 	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-	/* 绑定天空盒的顶点数组 */
 	glBindVertexArray(this->VAO);
 	glActiveTexture(GL_TEXTURE0);
-	/* 将0传给片元着色器中的 skybox变量 */
 	glUniform1i(glGetUniformLocation(this->shader.ProgramID, "skybox"), 0);
-	/* 使用天空盒纹理 */
 	glBindTexture(GL_TEXTURE_CUBE_MAP, this->TextureID);
-	/* 按三角形的方式渲染纹理 */
+	// draw the cube indexed by triangle
 	glDrawArrays(GL_TRIANGLES, 0, 36);
-	/* 解除顶点绑定 */
 	glBindVertexArray(0);
 	glPopMatrix();
 }

@@ -42,6 +42,8 @@ public:
 		delete[] this->data; 
 		delete this->wrappers;
 	}
+
+	// load the wrapper of the model, one model may have several wrappers.
 	void Model::LoadWrapper(std::string* filelist,unsigned int wrapper_number) {
 		this->wrapper_num = wrapper_number;
 		this->wrappers = new Wrapper[this->wrapper_num];
@@ -49,6 +51,8 @@ public:
 			Wrapper::InitWrapper(this->wrappers[i],filelist[i]);
 		}
 	}
+	
+	// load the raw data (vertexs, textures) as well as generate openGL objects.
 	void Load(std::string path, unsigned int level_index = 0);
 
 	Shader shader;
@@ -61,6 +65,7 @@ protected:
 
 	GLenum draw_type;
 
+	// load data of mesh contained in the model.
 	void LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, std::string & directory);
 	std::vector<Texture> LoadMeshMaterial(aiMaterial* material, aiTextureType type, std::string & directory);
 	std::vector<Texture> all_textures;

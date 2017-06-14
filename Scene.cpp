@@ -125,6 +125,7 @@ void Scene::CheckCollision() const{
 						this->plane->YawBack();
 						this->plane->RollBack();
 						this->plane->PitchBack();
+						this->plane->position.y() = this->background->GetHeight(this->plane->position.x(), this->plane->position.z());
 						return;
 					}
 					else {

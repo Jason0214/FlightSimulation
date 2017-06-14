@@ -35,7 +35,7 @@ using namespace std;
 #define STOP 0
 
 #define COLLISION_FREQUENCY 300
-#define FRAME_FREQUENCY 20
+#define RENDER_FREQUENCY 20
 GLuint STATUS;
 
 Camera camera(923.0f, 50.0f, 1000.0f);
@@ -55,9 +55,19 @@ static GLint last_mouse_y;
 
 
 static void ChangeSize(int width, int height);
+
+// mouse callback function, used for wander around the scene
 static void MouseMove(int, int);
 static void ResetMouse(int state);
-static void Movement(int timer_id);
+
+
+// a timer callback function for rendering
+// the scene with stable frequency (20frames/sec)
+static void RenderTimer(int timer_id);
+
+
+// timer callback function for collision detect,
+// it's costly, so do it with a lower frequency than render
 static void CollisionDetect(int timer_id);
 
 static void KeyPress(unsigned char key, int x, int y) {
@@ -73,6 +83,8 @@ static void SpecialKeyRelease(int key, int x, int y) {
 	SpecialKey[key] = false;
 }
 
+// the first function for initialize the game
+// load model&shader&height map from assets.
 static void init() {
 	glGetError(); // for glew bug
 	glShadeModel(GL_SMOOTH);
@@ -84,18 +96,17 @@ static void init() {
 	STATUS = PLANE;
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	memset(Key, false, 256 * sizeof(bool));
-	string cubemap_pic_path[6] = { "./assets/skybox/right.jpg","./assets/skybox/left.jpg","./assets/skybox/top.jpg","./assets/skybox/bottom.jpg","./assets/skybox/back.jpg","./assets/skybox/front.jpg" };
 	try {
 		// init skybox
+		string cubemap_pic_path[6] = { "./assets/skybox/right.jpg","./assets/skybox/left.jpg","./assets/skybox/top.jpg",
+									"./assets/skybox/bottom.jpg","./assets/skybox/back.jpg","./assets/skybox/front.jpg" };
 		skybox.LoadTexture(cubemap_pic_path, 6);
 		skybox.DeployTexture();
 		skybox.shader.LoadShader("./shaders/skybox_shader.vs", "./shaders/skybox_shader.frag");
 		// init depth frame
 		shadowMap.init();
 		shadowMap.shader.LoadShader("./shaders/shadow_map_shader.vs", "./shaders/shadow_map_shader.frag");
-		//shadowMap.test_init();
-		//shadowMap.test_shader.LoadShader("./shaders/test_shader.vs", "./shaders/test_shader.frag");
-
+		
 		// init tree model
 		Shader tree_shader;
 		string tree_small_wrapper_path[2] = { "./assets/wrapper/Ctrl_tree_small_up.obj","./assets/wrapper/Ctrl_tree_down.obj"};
@@ -218,25 +229,19 @@ int main(int argc, char* argv[]) {
 	glutSpecialUpFunc(SpecialKeyRelease);
 	glutPassiveMotionFunc(MouseMove);
 	glutEntryFunc(ResetMouse);
-	glutTimerFunc(FRAME_FREQUENCY, Movement, PLANE);
-	glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 1);
+	glutTimerFunc(RENDER_FREQUENCY, RenderTimer, 0);
+	glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 0);
 	glutMainLoop();
 }
 
-static void Movement(int timer_id) {
+static void RenderTimer(int timer_id) {
 	if (STATUS == STOP) {
 		if (Key['0']) {
 			STATUS = PLANE;
 			plane->init();
-			glutTimerFunc(FRAME_FREQUENCY, Movement, PLANE);
-			glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 1);
-		}
-		else {
-			glutTimerFunc(FRAME_FREQUENCY, Movement, STOP);
 		}
 	}
 	else if (STATUS == PLANE) {
-		STATUS = PLANE;
 		if (Key['W'] || Key['w']) {
 			plane->PitchUp();
 		}
@@ -267,16 +272,14 @@ static void Movement(int timer_id) {
 		}
 
 		if (Key['C'] || Key['c']) {
-			glutTimerFunc(FRAME_FREQUENCY, Movement, CAMERA);
+			STATUS = CAMERA;
 		}
 		else {
-			glutTimerFunc(FRAME_FREQUENCY, Movement, PLANE);
+			STATUS = PLANE;
 		}
 		plane->Forward();
-		glutPostRedisplay();
 	}
-	else if (STATUS = CAMERA) {
-		STATUS = CAMERA;
+	else if (STATUS == CAMERA) {
 		if (Key['W'] || Key['w']) {
 			camera.movefront();
 		}
@@ -290,13 +293,16 @@ static void Movement(int timer_id) {
 			camera.moveright();
 		}
 		if (Key['C'] || Key['c']) {
-			glutTimerFunc(FRAME_FREQUENCY, Movement, CAMERA);
+			STATUS = CAMERA;
 		}
 		else {
-			glutTimerFunc(FRAME_FREQUENCY, Movement, PLANE);
+			STATUS = PLANE;
 		}
+	}
+	if (STATUS != STOP) {
 		glutPostRedisplay();
 	}
+	glutTimerFunc(RENDER_FREQUENCY, RenderTimer, 0);
 }
 
 static void CollisionDetect(int timer_id) {
@@ -315,15 +321,15 @@ static void CollisionDetect(int timer_id) {
 		catch (const ReachBoard & e) {
 			plane->init();
 		}
-		glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 1);
 	}
+	glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 0);
 }
 
 static void ChangeSize(int width, int height) {
 	scene.window_height = height;
 	scene.window_width = width;
 	glViewport(0, 0, (GLuint)width, (GLuint)height);
-//re init mouse
+	//re init mouse
 	glutSetCursor(GLUT_CURSOR_NONE);
 	ResetMouse(0);
 }
