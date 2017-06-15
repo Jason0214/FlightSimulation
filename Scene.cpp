@@ -1,5 +1,7 @@
 #include "Scene.h"
 #include "Exception.h"
+#include <cstring>
+#include <cstdlib>
 
 #define FRUSTUM_NEAR (0.5f)
 #define FRUSTUM_RATIO (500)
@@ -12,13 +14,13 @@ Scene::Scene(int frustum_num){
 	this->object_num = 0;
 	this->background = NULL;
 	this->plane = NULL;
-	this->dist_order_dict = new map<GLfloat, ListNode*>[this->frustum_num];
+	this->sort_buf = NULL;
+	this->sort_buf_count = NULL;
 	memset(this->object_map, NULL, MAP_SIDE_NUM *MAP_SIDE_NUM * sizeof(ListNode*));
 }
 
 void Scene::AppendObject(vec3 & position, StaticModel* instance, vec3 & rotate, float angle){
 	ListNode* list_ptr = new ListNode(position, instance, rotate, angle);
-
 	if (this->object_list) {
 		ListNode* ptr_temp = this->object_list->next;
 		this->object_list->next = list_ptr;
@@ -41,22 +43,44 @@ void Scene::AppendObject(vec3 & position, StaticModel* instance, vec3 & rotate, 
 	this->object_num++;
 }
 
+static int comp(const void* a,const void* b) {
+	return (int)((*(RenderObj**)a)->distance - (*(RenderObj**)b)->distance);
+}
+
 void Scene::Arrange(const vec3 & camera_front,const vec3 & camera_position){
+	if (!this->sort_buf) {
+		this->sort_buf_count = new int[this->frustum_num];
+		this->sort_buf = new RenderObj**[this->frustum_num];
+		memset(this->sort_buf_count, 0, this->frustum_num * sizeof(int));
+		for (int i = 0; i < this->frustum_num; i++) {
+			this->sort_buf[i] = new RenderObj*[this->object_num];
+			memset(this->sort_buf[i], 0, this->object_num*sizeof(RenderObj*));
+		}
+	}
+	
 	for (ListNode* ptr = this->object_list; ptr != NULL; ptr = ptr->next) {
 		float distance = normalize(camera_front)*(ptr->position - camera_position);
 		// group all the object into different frustum according there distance to the camera
 			for (int i = 0; i < this->frustum_num; i++) {
 				if (FRUSTUM_NEAR * Power(FRUSTUM_RATIO, i) <= distance && distance < FRUSTUM_NEAR * Power(FRUSTUM_RATIO, i + 1)) {
-					this->dist_order_dict[i][distance] = ptr;
+					RenderObj* temp = this->sort_buf[i][this->sort_buf_count[i]];
+					if (!temp) {
+						temp = new RenderObj;
+						this->sort_buf[i][this->sort_buf_count[i]] = temp;
+					}
+					temp->distance = distance;
+					temp->node = ptr;
+					this->sort_buf_count[i]++;
 			}
 		}
+	}
+	for (int i = 0; i < this->frustum_num; i++) {
+		qsort(this->sort_buf[i], this->sort_buf_count[i], sizeof(RenderObj*),comp);
 	}
 }
 
 void Scene::ResetArrange() {
-	for (int i = 0; i < this->frustum_num; i++) {
-		this->dist_order_dict[i].clear();
-	}
+	memset(this->sort_buf_count, 0, this->frustum_num*sizeof(int));
 }
 
 void Scene::ReProject(int level_index) const{
@@ -71,11 +95,12 @@ void Scene::RenderAll(const LightSrc & sun, const DepthMap & depth_buffer)const{
 // draw objects from far to near in order to fit with alpha value
 	for (int i = this->frustum_num - 1; i >= 0; i--) {
 		this->ReProject(i); // change frustum and clear depth
-		for (map<float, ListNode*>::const_iterator ptr = this->dist_order_dict[i].begin(); ptr != this->dist_order_dict[i].end(); ptr++) {
-			if(ptr->first < 50.0f)
-				ptr->second->instance->Render(0, ptr->second->model_mat, sun, depth_buffer);
+		for (int j = 0; j < this->sort_buf_count[i]; j++) {
+			RenderObj* ptr = this->sort_buf[i][j];
+			if(ptr->distance < 50.0f)
+				ptr->node->instance->Render(0, ptr->node->model_mat, sun, depth_buffer);
 			else
-				ptr->second->instance->Render(1, ptr->second->model_mat, sun, depth_buffer);
+				ptr->node->instance->Render(1, ptr->node->model_mat, sun, depth_buffer);
 		}
 		if (this->background)
 			this->background->Render(sun, depth_buffer);
@@ -87,11 +112,12 @@ void Scene::RenderAll(const LightSrc & sun, const DepthMap & depth_buffer)const{
 void Scene::RenderFrame(const Shader & frame_shader)const{
 	frame_shader.Use();
 	for (int i = this->frustum_num - 1; i >= 0; i--) {
-		for (map<float, ListNode*>::const_iterator ptr = this->dist_order_dict[i].begin(); ptr != this->dist_order_dict[i].end(); ptr++) {
-			if(ptr->first < 50.0f)
-				ptr->second->instance->RenderFrame(0, ptr->second->model_mat, frame_shader);
+		for (int j = 0; j < this->sort_buf_count[i]; j++) {
+			RenderObj* ptr = this->sort_buf[i][j];
+			if(ptr->distance < 50.0f)
+				ptr->node->instance->RenderFrame(0, ptr->node->model_mat, frame_shader);
 			else
-				ptr->second->instance->RenderFrame(1, ptr->second->model_mat, frame_shader);
+				ptr->node->instance->RenderFrame(1, ptr->node->model_mat, frame_shader);
 		}
 	}
 	if (this->plane && !this->plane->is_crash)
@@ -213,7 +239,14 @@ void Scene::FreeAll(){
 			this->object_map[i][j] = NULL;
 		}
 	}
-
 	this->object_num = 0;
-	delete[] this->dist_order_dict;
+
+	delete[] this->sort_buf_count;
+	for (int i = 0; i < this->frustum_num; i++) {
+		for (int j = 0; j < this->object_num; j++) {
+			delete this->sort_buf[i][j];
+		}
+		delete[] this->sort_buf[i];
+	}
+	delete[] this->sort_buf;
 }

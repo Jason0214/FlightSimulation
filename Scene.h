@@ -5,7 +5,6 @@
 #include "DepthMap.h"
 #include "BackGround.h"
 #include "Plane.h"
-#include <map>
 
 #define MAP_SIDE_LEN  2
 #define MAP_SIDE_NUM 1000
@@ -35,12 +34,17 @@ public:
 	ListNode* next;
 };
 
+typedef struct render_obj_struct {
+	GLfloat distance;
+	ListNode* node;
+}RenderObj;
+
+
 class Scene{
 public:
 	Scene(int frustum_num);
 	~Scene() { 
 		this->FreeAll(); 
-		delete [] this->dist_order_dict;
 	}
 	void FreeAll();
 
@@ -66,5 +70,7 @@ private:
 	int object_num;
 	ListNode* object_list;
 	ListNode* object_map[MAP_SIDE_NUM][MAP_SIDE_NUM];
-	std::map<GLfloat,ListNode*>* dist_order_dict;  //XXX: better to be self-built
+
+	RenderObj*** sort_buf;  //XXX: better to be self-built
+	int* sort_buf_count;
 };

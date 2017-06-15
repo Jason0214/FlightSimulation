@@ -66,7 +66,7 @@ void PlaneModel::Forward() {
 	//cout << "roll:" << this->roll << endl;
 	//cout << "pitch:" << this->pitch << endl;
 
-	this->fan_spin += this->throttle  * 10;
+	this->fan_spin += this->throttle * 12;
 	if (this->fan_spin > 360.0f) fan_spin -= 360.0f;
 
 	this->speed += this->throttle * this->FULL_ACC - 0.86f * this->speed * this->speed - aSin(this->pitch)*0.05;
