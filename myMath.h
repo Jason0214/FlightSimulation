@@ -167,8 +167,8 @@ public:
 		return (float*)(&(this->value[index*3]));
 	}
 	mat3 & operator=(const mat3 & m);
-	mat3 & operator-(const mat3 & m);
-	mat3 & operator+(const mat3 & m);
+	mat3 operator-(const mat3 & m);
+	mat3 operator+(const mat3 & m);
 	float* data() { return &(this->value[0]); }
 	const float* data() const { return &(this->value[0]); }
 private:

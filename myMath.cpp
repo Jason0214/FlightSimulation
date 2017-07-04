@@ -219,12 +219,12 @@ mat3 & mat3::operator=(const mat3 & m){
 	}
 	return *this;
 }
-mat3 & mat3::operator-(const mat3 & m){
+mat3 mat3::operator-(const mat3 & m){
 	mat3 ret;
 	_add(ret.data(),this->value,m.data(),9);
 	return ret;
 }
-mat3 & mat3::operator+(const mat3 & m){
+mat3 mat3::operator+(const mat3 & m){
 	mat3 ret;
 	_subtract(ret.data(),this->value,m.data(),9);
 	return ret;

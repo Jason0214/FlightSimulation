@@ -44,7 +44,7 @@ void PlaneModel::init() {
 void PlaneModel::Rotate(GLfloat angle ,int pivot) {
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glLoadMatrixf(this->posture_mat);;
+	glLoadMatrixf(this->posture_mat);
 	switch (pivot) {
 	case YAW_PIVOT: glRotatef(angle, 0.0f, 1.0f, 0.0f); break;
 	case ROLL_PIVOT: glRotatef(angle, 1.0f, 0.0f, 0.0f); break;
