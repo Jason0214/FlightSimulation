@@ -7,5 +7,6 @@
 *.idb
 
 # for model
-*.o
+*.obj
 *.exe
+*.txt

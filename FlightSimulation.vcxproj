@@ -165,7 +165,7 @@
   <ItemGroup>
     <ClCompile Include="BackGround.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="DepthMap.cpp" />
+    <ClCompile Include="DepthBuffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -179,7 +179,7 @@
   <ItemGroup>
     <ClInclude Include="BackGround.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="DepthMap.h" />
+    <ClInclude Include="DepthBuffer.h" />
     <ClInclude Include="Exception.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Plane.h" />
