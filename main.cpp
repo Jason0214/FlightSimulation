@@ -24,7 +24,7 @@
 #include "Camera.h"
 #include "Scene.h"
 #include "Model.h"
-#include "DepthMap.h"
+#include "DepthBuffer.h"
 #include "LightSrc.h"
 #include "Plane.h"
 
@@ -42,7 +42,7 @@ Camera camera(923.0f, 50.0f, 1000.0f);
 SkyBox skybox;
 Scene scene(2); //multi frustum
 LightSrc sun(vec3(0.5f, 0.5f, 0.5f));
-DepthMap shadowMap(1024, 1024); //TODO
+DepthBuffer shadowMap(1024, 1024); //TODO
 PlaneModel* plane;
 StaticModel* tree[4];
 BackGround* mountain;
@@ -182,10 +182,7 @@ static void Display() {
 		scene.Arrange(plane->position - plane->View(), plane->View());
 	}
 		glViewport(0, 0, shadowMap.map_width, shadowMap.map_height);
-		shadowMap.begRenderDirLight(sun.direction, 20.0f, plane->position);
-			glClear(GL_DEPTH_BUFFER_BIT);
-			scene.RenderFrame(shadowMap.shader);
-		shadowMap.endRender();
+		shadowMap.DirLightRender(sun.direction, plane->position, scene.RenderFrame);
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, scene.window_width, scene.window_height);

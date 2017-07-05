@@ -2,7 +2,7 @@
 #include "myMath.h"
 #include "Model.h"
 #include "LightSrc.h"
-#include "DepthMap.h"
+#include "DepthBuffer.h"
 #include "BackGround.h"
 #include "Plane.h"
 
@@ -54,7 +54,7 @@ public:
 	void Arrange(const vec3 & camera_front,const vec3 & camera_position);
 	void ResetArrange();
 
-	void RenderAll(const LightSrc & sun, const DepthMap & depth_buffer)const;//XXX
+	void RenderAll(const LightSrc & sun, const DepthBuffer & depth_buffer)const;//XXX
 	void RenderFrame(const Shader & frame_shader)const;
 
 	void CheckCollision() const;

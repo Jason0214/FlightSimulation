@@ -12,10 +12,10 @@ using namespace std;
 PlaneModel::PlaneModel(vec3 origin_position) :Model(GL_DYNAMIC_DRAW), origin(origin_position) {
 	this->FULL_ACC = 0.1;
 	this->MAX_SPEED = 0.5;
-	this->AIR_YAW_SPEED = 0.3;
-	this->LAND_YAW_SPEED = 0.8;
-	this->ROLL_SPEED = 0.8;
-	this->PITCH_SPEED = 0.5;
+	this->AIR_YAW_SPEED = 0.15;
+	this->LAND_YAW_SPEED = 0.4;
+	this->ROLL_SPEED = 0.3;
+	this->PITCH_SPEED = 0.15;
 
 	this->init();
 }
@@ -69,7 +69,7 @@ void PlaneModel::Forward() {
 	this->fan_spin += this->throttle * 12;
 	if (this->fan_spin > 360.0f) fan_spin -= 360.0f;
 
-	this->speed += this->throttle * this->FULL_ACC - 0.86f * this->speed * this->speed - aSin(this->pitch)*0.05;
+	this->speed += this->throttle * this->FULL_ACC - 0.86f * this->speed * this->speed;
 	if (this->speed < 0) this->speed = 0.0f;
 	GLfloat up_speed;
 	if (this->is_land) {
@@ -79,9 +79,9 @@ void PlaneModel::Forward() {
 		up_speed = 0.0f;
 	}
 	else {
-		up_speed = 0.4 * this->speed * this->speed  - 0.02;
+		up_speed = 0.4 * this->speed * this->speed  - 0.02 * aCos(this->pitch);
 	}
-	this->position = this->position + this->front * this->speed;
+	this->position = this->position + this->front * this->speed + this->up * up_speed;
 }
 
 void PlaneModel::SpeedUp(){
@@ -190,7 +190,7 @@ void PlaneModel::Translate()const{
 	glMultMatrixf(this->posture_mat);
 }
 
-void PlaneModel::Render(const LightSrc & light, const DepthMap & depth_buffer) const {
+void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer) const {
 	MeshData & current_mesh_set = this->data[0];
 	GLfloat matrix_buf[16];
 	this->shader.Use();
@@ -198,14 +198,14 @@ void PlaneModel::Render(const LightSrc & light, const DepthMap & depth_buffer) c
 	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
 	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 	glPushMatrix();
-		glLoadMatrixf(depth_buffer.light_space_view);
+		glLoadMatrixf(depth_buffer.GetLightViewMatrx(0));
 		this->Translate();
 		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view"), 1, GL_FALSE, matrix_buf);
 	glPopMatrix();
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_projection"), 1, GL_FALSE, depth_buffer.light_space_project);
+	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_projection"), 1, GL_FALSE, depth_buffer.GetLightProjectMatrix(0));
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, depth_buffer.depth_textureID);
+	glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(0));
 	glUniform1i(glGetUniformLocation(this->shader.ProgramID, "depth_map"), 0);
 	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), light.direction[0], light.direction[1], light.direction[2]);
 	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), light.color[0], light.color[1], light.color[2]);

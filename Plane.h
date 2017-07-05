@@ -6,7 +6,7 @@ class PlaneModel: public Model {
 public:
 	PlaneModel(vec3 origin_position);
 	~PlaneModel(){}
-	void Render(const LightSrc & light, const DepthMap & depth_buffer) const;
+	void Render(const LightSrc & light, const DepthBuffer & depth_buffer) const;
 	void RenderFrame(const Shader & frame_shader) const;
 
 	bool is_land;

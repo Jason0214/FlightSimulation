@@ -49,15 +49,15 @@ void Mesh::render(GLuint program) const {
 	glBindVertexArray(this->VAO);
 	//XXX:  to simplify only use the first diffuse_texture and specular_texture
 	if (this->diffuse_texture.size() > 0) {
-		glActiveTexture(GL_TEXTURE1);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, this->diffuse_texture[0].ID);
-		glUniform1i(glGetUniformLocation(program, "diffuse_texture"), 1);
+		glUniform1i(glGetUniformLocation(program, "diffuse_texture"), 0);
 	}
 	if (this->specular_texture.size() > 0) {
 		glUniform1f(glGetUniformLocation(program,"specular_strength"), 0.5);
-		glActiveTexture(GL_TEXTURE2);
+		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, this->specular_texture[0].ID);
-		glUniform1i(glGetUniformLocation(program, "specular_texture"), 2);
+		glUniform1i(glGetUniformLocation(program, "specular_texture"), 1);
 	}
 	else {
 		glUniform1f(glGetUniformLocation(program, "specular_strength"), 0);
@@ -68,11 +68,6 @@ void Mesh::render(GLuint program) const {
 
 void Mesh::render_frame(GLuint program) const {
 	glBindVertexArray(this->VAO);
-	if (this->diffuse_texture.size() > 0) {
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, this->diffuse_texture[0].ID);
-		glUniform1i(glGetUniformLocation(program, "diffuse_texture"), 1);
-	}
 	glDrawElements(GL_TRIANGLES, this->i_num, GL_UNSIGNED_INT, (GLvoid*)0);
 	glBindVertexArray(0);
 }

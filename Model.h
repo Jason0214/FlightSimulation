@@ -17,7 +17,7 @@
 #include "myMath.h"
 #include "Shader.h"
 #include "LightSrc.h"
-#include "DepthMap.h"
+#include "DepthBuffer.h"
 #include "Camera.h"
 #include "Wrapper.h"
 
@@ -76,7 +76,7 @@ class StaticModel:public Model {
 public:
 	StaticModel():Model(GL_STATIC_DRAW, 2){}
 	~StaticModel(){}
-	virtual void Render(unsigned int level_index, const GLfloat*, const LightSrc & light, const DepthMap & depth_buffer) const;
+	virtual void Render(unsigned int level_index, const GLfloat*, const LightSrc & light, const DepthBuffer & depth_buffer) const;
 	virtual void RenderFrame(unsigned int level_index, const GLfloat*, const Shader & frame_shader) const;
 protected:
 

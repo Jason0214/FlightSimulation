@@ -91,7 +91,7 @@ void Scene::ReProject(int level_index) const{
 	glClear(GL_DEPTH_BUFFER_BIT);
 }
 
-void Scene::RenderAll(const LightSrc & sun, const DepthMap & depth_buffer)const{
+void Scene::RenderAll(const LightSrc & sun, const DepthBuffer & depth_buffer)const{
 // draw objects from far to near in order to fit with alpha value
 	for (int i = this->frustum_num - 1; i >= 0; i--) {
 		this->ReProject(i); // change frustum and clear depth
