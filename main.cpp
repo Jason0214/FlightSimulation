@@ -24,8 +24,6 @@
 #include "Camera.h"
 #include "Scene.h"
 #include "Model.h"
-#include "DepthBuffer.h"
-#include "LightSrc.h"
 #include "Plane.h"
 
 using namespace std;
@@ -40,9 +38,8 @@ GLuint STATUS;
 
 Camera camera(923.0f, 50.0f, 1000.0f);
 SkyBox skybox;
-Scene scene(2); //multi frustum
+Scene scene;
 LightSrc sun(vec3(0.5f, 0.5f, 0.5f));
-DepthBuffer shadowMap(1024, 1024); //TODO
 PlaneModel* plane;
 StaticModel* tree[4];
 BackGround* mountain;
@@ -72,7 +69,7 @@ static void CollisionDetect(int timer_id);
 
 static void KeyPress(unsigned char key, int x, int y) {
 	Key[key] = true;
-}
+}	
 static void KeyRelease(unsigned char key, int x, int y) {
 	Key[key] = false;
 }
@@ -92,26 +89,27 @@ static void init() {
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	srand(time(0));
-	STATUS = PLANE;
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	// set random seed
+	srand(time(0));
+	// set initial view port
+	STATUS = PLANE;
+	// set key buffer
 	memset(Key, false, 256 * sizeof(bool));
+	// 
 	try {
 		// init skybox
 		string cubemap_pic_path[6] = { "./assets/skybox/right.jpg","./assets/skybox/left.jpg","./assets/skybox/top.jpg",
 									"./assets/skybox/bottom.jpg","./assets/skybox/back.jpg","./assets/skybox/front.jpg" };
 		skybox.LoadTexture(cubemap_pic_path, 6);
 		skybox.DeployTexture();
-		skybox.shader.LoadShader("./shaders/skybox_shader.vs", "./shaders/skybox_shader.frag");
-		// init depth frame
-		shadowMap.init();
-		shadowMap.shader.LoadShader("./shaders/shadow_map_shader.vs", "./shaders/shadow_map_shader.frag");
-		
+		skybox.shader.LoadShader("./shaders/skybox_shader.vs", "./shaders/skybox_shader.fs");
+	
 		// init tree model
 		Shader tree_shader;
 		string tree_small_wrapper_path[2] = { "./assets/wrapper/Ctrl_tree_small_up.obj","./assets/wrapper/Ctrl_tree_down.obj"};
 		string tree_big_wrapper_path[2] = { "./assets/wrapper/Ctrl_tree_big_up.obj","./assets/wrapper/Ctrl_tree_down.obj" };
-		tree_shader.LoadShader("./shaders/tree_shader.vs", "./shaders/tree_shader.frag");
+		tree_shader.LoadShader("./shaders/basic_shader.vs", "./shaders/basic_shader_support_alpha.fs");
 		for (unsigned int i = 0; i < 4; i++) {
 			tree[i] = new StaticModel();
 			tree[i]->shader = tree_shader;
@@ -127,7 +125,7 @@ static void init() {
 		tree[3]->LoadWrapper(tree_big_wrapper_path, 2);
 
 		Shader mountain_shader;
-		mountain_shader.LoadShader("./shaders/background_shader.vs", "./shaders/background_shader.frag");
+		mountain_shader.LoadShader("./shaders/basic_shader.vs", "./shaders/basic_shader.fs");
 		mountain = new BackGround();
 		mountain->Load("./assets/terrain/mountains_4.obj");
 		mountain->shader = mountain_shader;
@@ -143,7 +141,7 @@ static void init() {
 										"./assets/wrapper/Ctrl_wheel.obj","./assets/wrapper/Ctrl_wing.obj"};
 		plane->Load("./assets/plane/Spowith.obj");
 		plane->LoadWrapper(plane_wrapper_path, 6);
-		plane->shader = mountain_shader;
+		plane->shader.LoadShader("./shaders/plane_shader.vs", "./shaders/plane_shader.fs");
 		
 		// assign the position of tree model
 		scene.AppendObject(vec3(929.0f, 0, 1018.0f), tree[0]);
@@ -156,15 +154,8 @@ static void init() {
 		scene.AppendObject(vec3(1200.0f, 5.0f, 1000.0f), tree[2]);
 		scene.background = mountain;
 		scene.plane = plane;
-	}
-	catch (const LoadFileError & e) {
-		cout << e.Info();
-	}
-	catch (const LoadModelError & e) {
-		cout << e.Info();
-	}
-	catch (const ShaderCompileError & e) {
-		cout << e.Info();
+		// init depth frame
+		scene.shadow_map.init("./shaders/shadow_map_shader.vs", "./shaders/shadow_map_shader.fs");
 	}
 	catch (const Exception & e) {
 		cout << e.Info();
@@ -181,14 +172,11 @@ static void Display() {
 	else{
 		scene.Arrange(plane->position - plane->View(), plane->View());
 	}
-		glViewport(0, 0, shadowMap.map_width, shadowMap.map_height);
-		shadowMap.DirLightRender(sun.direction, plane->position, scene.RenderFrame);
-		
+		//glViewport(0, 0, shadowMap.map_width, shadowMap.map_height);
+		//shadowMap.DirLightRender(sun.direction, plane->position, scene);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, scene.window_width, scene.window_height);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		gluPerspective(45.0f, (GLfloat)scene.window_width / (GLfloat)scene.window_height, 1.0f, 20.0f);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		if (STATUS == CAMERA) {
@@ -203,8 +191,7 @@ static void Display() {
 				0.0f, 1.0f, 0.0f);
 			skybox.Draw(plane->View().x(), plane->View().y(), plane->View().z());
 		}
-		scene.RenderAll(sun, shadowMap);
-	scene.ResetArrange();
+		scene.RenderAll(sun);
 	glutSwapBuffers();
 }
 
@@ -213,19 +200,20 @@ int main(int argc, char* argv[]) {
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE );
 	glutInitWindowPosition(100, 100);
 	glutInitWindowSize(800, 600);
-	glutCreateWindow("Mountain");
+	glutCreateWindow("FlightSimluation");
 	glewExperimental = GL_TRUE;
 	glewInit();
 	//
 	init();
-	glutDisplayFunc(Display);
 	glutReshapeFunc(ChangeSize);
+	glutDisplayFunc(Display);
 	glutKeyboardFunc(KeyPress);
 	glutKeyboardUpFunc(KeyRelease);
 	glutSpecialFunc(SpecialKeyPress);
 	glutSpecialUpFunc(SpecialKeyRelease);
 	glutPassiveMotionFunc(MouseMove);
 	glutEntryFunc(ResetMouse);
+	scene.GenerateProjectionMatrix();
 	glutTimerFunc(RENDER_FREQUENCY, RenderTimer, 0);
 	glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 0);
 	glutMainLoop();
@@ -307,15 +295,15 @@ static void CollisionDetect(int timer_id) {
 		try {
 			scene.CheckCollision();
 		}
-		catch (const Collision & e) {
+		catch (const Collision & ) {
 			plane->is_crash = true;
 			glutPostRedisplay();
 			STATUS = STOP;
 		}
-		catch (const WarningBoard & e) {
+		catch (const WarningBoard & ) {
 
 		}
-		catch (const ReachBoard & e) {
+		catch (const ReachBoard & ) {
 			plane->init();
 		}
 	}
@@ -326,6 +314,9 @@ static void ChangeSize(int width, int height) {
 	scene.window_height = height;
 	scene.window_width = width;
 	glViewport(0, 0, (GLuint)width, (GLuint)height);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1.0f, 20.0f); // default : for skybox
 	//re init mouse
 	glutSetCursor(GLUT_CURSOR_NONE);
 	ResetMouse(0);

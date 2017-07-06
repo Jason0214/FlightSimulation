@@ -4,19 +4,22 @@
 #pragma comment (lib, "glew32s.lib")
 #include "myMath.h"
 #include "Shader.h"
+#include <string>
 
 //#define DEPTH_TEST
 
-#define CASCADE_NUM 3
+#define CASCADE_NUM 3 // must keep consistent with cascade number in shader
+
+class Scene;
 
 class DepthBuffer{
 public:
 	DepthBuffer(GLuint map_width, GLuint map_height) :map_width(map_width), map_height(map_height) { };
 	~DepthBuffer();
-	void DirLightRender(vec3 & light_dir, vec3 & center, void(*render)(void));
+	void DirLightRender(vec3 & light_dir, vec3 & center, Scene & scene);
 	void DotLightRender();
-	void init();
-	const GLfloat* GetLightViewMatrx(int index) const{
+	void init(std::string vs_path, std::string fs_path);
+	const GLfloat* GetLightViewMatrix(int index) const{
 		return this->light_space_view[index];
 	}
 	const GLfloat* GetLightProjectMatrix(int index) const{

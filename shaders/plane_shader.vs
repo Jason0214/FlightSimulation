@@ -7,8 +7,8 @@ layout (location = 2) in vec2 texCoords;
 out vec2 TexCoords;
 out vec3 Normal;
 out vec3 LightDirection;
-out vec4 FragPosition;
-out vec4 LightSpaceFragPos;
+out vec4 ViewPosition;
+out vec4 LightSpacePosition;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -20,8 +20,8 @@ uniform vec3 light_direction;
 void main()
 {
 // vertix position
-    FragPosition = view * vec4(position, 1.0f);
-    gl_Position = projection * FragPosition;
+    ViewPosition = view * vec4(position, 1.0f);
+    gl_Position = projection * ViewPosition;
 
 // translate normal vector
 	mat4 mat_view = transpose(inverse(view));
@@ -32,5 +32,5 @@ void main()
     TexCoords = texCoords; 
 
 // light space position, for shadow mapping
-	LightSpaceFragPos = light_space_projection * light_space_view * vec4(position,1.0);
+	LightSpacePosition = light_space_projection * light_space_view * vec4(position,1.0);
 }

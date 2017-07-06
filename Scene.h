@@ -5,15 +5,16 @@
 #include "DepthBuffer.h"
 #include "BackGround.h"
 #include "Plane.h"
+#include <vector>
 
 #define MAP_SIDE_LEN  2
 #define MAP_SIDE_NUM 1000
 #define SCENE_LEN (2000.0f)
 
-class ListNode{
+class Instance{
 public:
-	ListNode(const vec3 & position, StaticModel* instance, const vec3 & pivot, float angle)
-		:next(NULL),position(position),instance(instance){
+	Instance(const vec3 & position, StaticModel* model, const vec3 & pivot, float angle)
+		:position(position), model(model){
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
@@ -23,54 +24,50 @@ public:
 		glGetFloatv(GL_MODELVIEW_MATRIX, this->model_mat);
 		glPushMatrix();
 	}
-	ListNode(const ListNode & node):next(NULL),position(node.position) {
-		this->instance = node.instance;
-		memcpy(this->model_mat, node.model_mat, 16 * sizeof(GLfloat));
+	Instance(const Instance & instance):position(instance.position) {
+		this->model = instance.model;
+		memcpy(this->model_mat, instance.model_mat, 16 * sizeof(GLfloat));
 	}
-	~ListNode() {}
+	~Instance() {}
 	GLfloat model_mat[16];
 	vec3 position;
-	StaticModel* instance;
-	ListNode* next;
+	StaticModel* model;
 };
 
-typedef struct render_obj_struct {
+struct InstancePtrWithDist {
+	Instance* instance_ptr;
 	GLfloat distance;
-	ListNode* node;
-}RenderObj;
-
+};
 
 class Scene{
 public:
-	Scene(int frustum_num);
+	Scene();
 	~Scene() { 
 		this->FreeAll(); 
 	}
 	void FreeAll();
 
 	void AppendObject(vec3 & position, StaticModel* instance, vec3 & rotate = vec3(0.0f,0.0f,0.0f), float angle = 0.0f);
-	void ReProject(int level_index)const;
-
 	void Arrange(const vec3 & camera_front,const vec3 & camera_position);
-	void ResetArrange();
 
-	void RenderAll(const LightSrc & sun, const DepthBuffer & depth_buffer)const;//XXX
-	void RenderFrame(const Shader & frame_shader)const;
-
+	void RenderAll(const LightSrc & sun)const;
+	void GenerateShadowMap();
+	void GenerateProjectionMatrix();
 	void CheckCollision() const;
 	bool OBBdetection(Wrapper & a, Wrapper & b)const;
 
 	BackGround* background;
 	PlaneModel* plane;
+	DepthBuffer shadow_map;
 
 	GLint window_width;
 	GLint window_height;
 private:
-	int frustum_num;
-	int object_num;
-	ListNode* object_list;
-	ListNode* object_map[MAP_SIDE_NUM][MAP_SIDE_NUM];
+	std::vector<Instance*> object_list;
+	std::vector<Instance*> object_grid_map[MAP_SIDE_NUM][MAP_SIDE_NUM];
+	GLfloat projection_mat[CASCADE_NUM][16];
 
-	RenderObj*** sort_buf;  //XXX: better to be self-built
-	int* sort_buf_count;
+	InstancePtrWithDist** buf_for_sort;  //XXX: better to be self-built
+
+	const GLfloat z_clip[CASCADE_NUM + 1] = { 1.0f, 40.0f, 200.0f, 10000.0f };
 };

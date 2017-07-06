@@ -1,5 +1,6 @@
 #include "Model.h"
 #include "Exception.h"
+#include <sstream>
 #include <string>
 
 using namespace std;
@@ -107,32 +108,50 @@ void Model::Load(string path, unsigned int level_index) {
 	import.FreeScene();
 }
 
-void StaticModel::Render(unsigned int level_index,const GLfloat* model_mat, const LightSrc & sun, const DepthBuffer & depth_buffer) const{
+void StaticModel::Render(unsigned int level_index,const GLfloat* model_mat, const LightSrc & sun, const DepthBuffer & depth_buffer,
+							const GLfloat z_clip[], const GLfloat projection_mat[][16]) const{
 	glMatrixMode(GL_MODELVIEW);
 	GLfloat matrix_buf[16];
 	glPushMatrix();
 		glMultMatrixf(model_mat);
 		this->shader.Use();
-		glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 3, GL_FALSE, (GLfloat *)projection_mat);
 		// pass in shadow texture
-		glUniform1f(glGetUniformLocation(this->shader.ProgramID, "cascade_num"), CASCADE_NUM);
-		glUniform1f(glGetUniformLocation(this->shader.ProgramID, "base_distance"), depth_buffer.BASE_DIST);
-		glUniform1f(glGetUniformLocation(this->shader.ProgramID, "ratio"), depth_buffer.RATIO);
-		for (int i = 0; i < CASCADE_NUM; i++) {
-			glPushMatrix();
-			glLoadMatrixf(depth_buffer.GetLightProjectMatrix(i));
-			glMultMatrixf(model_mat);
-			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view"), 1, GL_FALSE, matrix_buf);
-			glPopMatrix();
-			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_projection"), 1, GL_FALSE, depth_buffer.GetLightProjectMatrix(i));
-			glActiveTexture(GL_TEXTURE4 + i); // reserve 4 textures for diffuse and specular
-			glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(i));
-			glUniform1i(glGetUniformLocation(this->shader.ProgramID, "depth_map"), 4+i);
-		}
+			//glPushMatrix();
+			//	glLoadMatrixf(depth_buffer.GetLightViewMatrix(0));
+			//	glMultMatrixf(model_mat);
+			//	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+			//	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view[0]"), 1, GL_FALSE, matrix_buf);
+			//glPopMatrix();
+			//glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_project[0]"), 1, GL_FALSE, depth_buffer.GetLightProjectMatrix(0));
+			//glActiveTexture(GL_TEXTURE4); // reserve 4 textures for diffuse and specular
+			//glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(0));
+			//glUniform1i(glGetUniformLocation(this->shader.ProgramID, "shadow_map[0]"), 4);
+			//
+			//glPushMatrix();
+			//	glLoadMatrixf(depth_buffer.GetLightViewMatrix(1));
+			//	glMultMatrixf(model_mat);
+			//	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+			//	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view[1]"), 1, GL_FALSE, matrix_buf);
+			//glPopMatrix();
+			//glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_project[1]"), 1, GL_FALSE, depth_buffer.GetLightProjectMatrix(1));
+			//glActiveTexture(GL_TEXTURE5); // reserve 4 textures for diffuse and specular
+			//glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(1));
+			//glUniform1i(glGetUniformLocation(this->shader.ProgramID, "shadow_map[1]"), 5);
+			//
+			//glPushMatrix();
+			//	glLoadMatrixf(depth_buffer.GetLightViewMatrix(2));
+			//	glMultMatrixf(model_mat);
+			//	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+			//	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view[2]"), 1, GL_FALSE, matrix_buf);
+			//glPopMatrix();
+			//glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_project[2]"), 1, GL_FALSE, depth_buffer.GetLightProjectMatrix(2));
+			//glActiveTexture(GL_TEXTURE6); // reserve 4 textures for diffuse and specular
+			//glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(2));
+			//glUniform1i(glGetUniformLocation(this->shader.ProgramID, "shadow_map[2]"), 6);
+			glUniform4fv(glGetUniformLocation(this->shader.ProgramID, "z_clip"), 4, z_clip);
 		// pass in light param
 		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
 		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);

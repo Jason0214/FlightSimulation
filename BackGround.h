@@ -7,8 +7,9 @@ public:
 	BackGround();
 	~BackGround(){}
 	// inheirts from class::StaticModel
-	void Render(const LightSrc & light, const DepthMap & depth_buffer, unsigned int level_index = 0) const{
-		this->StaticModel::Render(level_index, this->model_mat, light, depth_buffer);
+	void Render(const LightSrc & light, const DepthBuffer & depth_buffer, const GLfloat z_clip[], 
+		const GLfloat projection_mat[][16], unsigned int level_index = 0) const{
+		this->StaticModel::Render(level_index, this->model_mat, light, depth_buffer, z_clip, projection_mat);
 	}
 	// inheirts from class::StaticModel
 	void RenderFrame(const Shader & frame_shader, unsigned int level_index = 0)const{

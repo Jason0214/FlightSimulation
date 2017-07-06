@@ -15,7 +15,7 @@ PlaneModel::PlaneModel(vec3 origin_position) :Model(GL_DYNAMIC_DRAW), origin(ori
 	this->AIR_YAW_SPEED = 0.15;
 	this->LAND_YAW_SPEED = 0.4;
 	this->ROLL_SPEED = 0.3;
-	this->PITCH_SPEED = 0.15;
+	this->PITCH_SPEED = 0.2;
 
 	this->init();
 }
@@ -190,15 +190,14 @@ void PlaneModel::Translate()const{
 	glMultMatrixf(this->posture_mat);
 }
 
-void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer) const {
+void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer, const GLfloat projection_mat[]) const {
 	MeshData & current_mesh_set = this->data[0];
 	GLfloat matrix_buf[16];
 	this->shader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
 	glMatrixMode(GL_MODELVIEW);
-	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 	glPushMatrix();
-		glLoadMatrixf(depth_buffer.GetLightViewMatrx(0));
+		glLoadMatrixf(depth_buffer.GetLightViewMatrix(0));
 		this->Translate();
 		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view"), 1, GL_FALSE, matrix_buf);
