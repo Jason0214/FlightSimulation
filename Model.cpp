@@ -151,7 +151,7 @@ void StaticModel::Render(unsigned int level_index,const GLfloat* model_mat, cons
 			//glActiveTexture(GL_TEXTURE6); // reserve 4 textures for diffuse and specular
 			//glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(2));
 			//glUniform1i(glGetUniformLocation(this->shader.ProgramID, "shadow_map[2]"), 6);
-			glUniform4fv(glGetUniformLocation(this->shader.ProgramID, "z_clip"), 4, z_clip);
+			glUniform1fv(glGetUniformLocation(this->shader.ProgramID, "z_clip"), 4, z_clip);
 		// pass in light param
 		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
 		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);

@@ -173,7 +173,6 @@ static void Display() {
 		scene.Arrange(plane->position - plane->View(), plane->View());
 	}
 		//glViewport(0, 0, shadowMap.map_width, shadowMap.map_height);
-		//shadowMap.DirLightRender(sun.direction, plane->position, scene);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, scene.window_width, scene.window_height);
@@ -191,6 +190,7 @@ static void Display() {
 				0.0f, 1.0f, 0.0f);
 			skybox.Draw(plane->View().x(), plane->View().y(), plane->View().z());
 		}
+		glClear(GL_DEPTH_BUFFER_BIT);
 		scene.RenderAll(sun);
 	glutSwapBuffers();
 }
@@ -316,7 +316,7 @@ static void ChangeSize(int width, int height) {
 	glViewport(0, 0, (GLuint)width, (GLuint)height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1.0f, 20.0f); // default : for skybox
+	gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 1.0f, 40.0f); // default : for skybox
 	//re init mouse
 	glutSetCursor(GLUT_CURSOR_NONE);
 	ResetMouse(0);

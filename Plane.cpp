@@ -194,7 +194,14 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer
 	MeshData & current_mesh_set = this->data[0];
 	GLfloat matrix_buf[16];
 	this->shader.Use();
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
+	for (int i = 0; i < 16; i++) {
+		cout << projection_mat[i] << endl;
+	}
+	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
+	for (int i = 0; i < 16; i++) {
+		cout << matrix_buf[i] << " "<< projection_mat[i] << endl;
+	}
+	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 		glLoadMatrixf(depth_buffer.GetLightViewMatrix(0));
@@ -251,17 +258,16 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer
 			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
 			current_mesh_set.meshes[PITCH_FIN].render(this->shader.ProgramID);
 		}
-			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-			current_mesh_set.meshes[PITCH_FIN].render(this->shader.ProgramID);
-			current_mesh_set.meshes[BODY].render(this->shader.ProgramID);
-			current_mesh_set.meshes[LEFT_WHEEL].render(this->shader.ProgramID);
-			current_mesh_set.meshes[RIGHT_WHEEL].render(this->shader.ProgramID);
-			current_mesh_set.meshes[LEFT_DOWN_FLAP].render(this->shader.ProgramID);
-			current_mesh_set.meshes[LEFT_UP_FLAP].render(this->shader.ProgramID);
-			current_mesh_set.meshes[RITGHT_DOWN_FLAP].render(this->shader.ProgramID);
-			current_mesh_set.meshes[RITGHT_UP_FLAP].render(this->shader.ProgramID);
-			current_mesh_set.meshes[GUN].render(this->shader.ProgramID);
+		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+		current_mesh_set.meshes[BODY].render(this->shader.ProgramID);
+		current_mesh_set.meshes[LEFT_WHEEL].render(this->shader.ProgramID);
+		current_mesh_set.meshes[RIGHT_WHEEL].render(this->shader.ProgramID);
+		current_mesh_set.meshes[LEFT_DOWN_FLAP].render(this->shader.ProgramID);
+		current_mesh_set.meshes[LEFT_UP_FLAP].render(this->shader.ProgramID);
+		current_mesh_set.meshes[RITGHT_DOWN_FLAP].render(this->shader.ProgramID);
+		current_mesh_set.meshes[RITGHT_UP_FLAP].render(this->shader.ProgramID);
+		current_mesh_set.meshes[GUN].render(this->shader.ProgramID);
 	}
 	else {
 		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {

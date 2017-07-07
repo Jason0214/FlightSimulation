@@ -47,6 +47,7 @@ void Scene::Arrange(const vec3 & camera_front,const vec3 & camera_position){
 }
 
 void Scene::GenerateProjectionMatrix() {
+	glViewport(0, 0, this->window_width, this->window_height);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	for (int i = 0; i < CASCADE_NUM; i++) {
@@ -59,7 +60,7 @@ void Scene::GenerateProjectionMatrix() {
 
 void Scene::RenderAll(const LightSrc & sun)const{
 // draw objects from far to near in order to fit with alpha value
-	for (unsigned int j = 0; j < this->object_list.size(); j++) {
+	/*for (unsigned int j = 0; j < this->object_list.size(); j++) {
 		if (this->buf_for_sort[j]->distance < 40.0f) {
 			this->buf_for_sort[j]->instance_ptr->model->Render(0, this->buf_for_sort[j]->instance_ptr->model_mat,
 				sun, this->shadow_map, this->z_clip, this->projection_mat);
@@ -68,8 +69,9 @@ void Scene::RenderAll(const LightSrc & sun)const{
 			this->buf_for_sort[j]->instance_ptr->model->Render(1, this->buf_for_sort[j]->instance_ptr->model_mat,
 				sun, this->shadow_map, this->z_clip, this->projection_mat);
 		}
-	}
-	this->background->Render(sun, this->shadow_map, this->z_clip, this->projection_mat);
+	}*/
+//	cout << glGetError() << endl;
+	//this->background->Render(sun, this->shadow_map, this->z_clip, this->projection_mat);
 	this->plane->Render(sun, this->shadow_map, this->projection_mat[0]);
 }
 
