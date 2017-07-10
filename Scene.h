@@ -11,6 +11,8 @@
 #define MAP_SIDE_NUM 1000
 #define SCENE_LEN (2000.0f)
 
+#define FRUSTUM_LEVEL 2
+
 class Instance{
 public:
 	Instance(const vec3 & position, StaticModel* model, const vec3 & pivot, float angle)
@@ -52,7 +54,7 @@ public:
 
 	void RenderAll(const LightSrc & sun)const;
 	void GenerateShadowMap();
-	void GenerateProjectionMatrix();
+	void GenerateProjectionMatrix(GLuint width, GLuint height);
 	void CheckCollision() const;
 	bool OBBdetection(Wrapper & a, Wrapper & b)const;
 
@@ -65,9 +67,9 @@ public:
 private:
 	std::vector<Instance*> object_list;
 	std::vector<Instance*> object_grid_map[MAP_SIDE_NUM][MAP_SIDE_NUM];
-	GLfloat projection_mat[CASCADE_NUM][16];
+	GLfloat projection_mat[FRUSTUM_LEVEL][16];
 
 	InstancePtrWithDist** buf_for_sort;  //XXX: better to be self-built
 
-	const GLfloat z_clip[CASCADE_NUM + 1] = { 1.0f, 40.0f, 200.0f, 10000.0f };
+	const GLfloat frustum_clip[FRUSTUM_LEVEL + 1] = { 1.0f, 500.0f, 2500.0f};
 };

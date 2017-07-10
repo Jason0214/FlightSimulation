@@ -3,9 +3,6 @@
 #include <cstring>
 #include <cstdlib>
 
-#define FRUSTUM_NEAR (0.5f)
-#define FRUSTUM_RATIO (500)
-
 #include <iostream>
 using namespace std;
 
@@ -46,13 +43,13 @@ void Scene::Arrange(const vec3 & camera_front,const vec3 & camera_position){
 	qsort(this->buf_for_sort, this->object_list.size(), sizeof(InstancePtrWithDist*), comp);
 }
 
-void Scene::GenerateProjectionMatrix() {
-	glViewport(0, 0, this->window_width, this->window_height);
+void Scene::GenerateProjectionMatrix(GLuint width, GLuint height) {
+	glViewport(0, 0, width, height);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	for (int i = 0; i < CASCADE_NUM; i++) {
+	for (int i = 0; i < FRUSTUM_LEVEL; i++) {
 		glLoadIdentity();
-		gluPerspective(45.0f, (GLfloat)this->window_width / (GLfloat)this->window_height, this->z_clip[i], this->z_clip[i+1]);
+		gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, this->frustum_clip[i], this->frustum_clip[i+1]);
 		glGetFloatv(GL_PROJECTION_MATRIX, this->projection_mat[i]);
 	}
 	glPopMatrix();
@@ -60,18 +57,17 @@ void Scene::GenerateProjectionMatrix() {
 
 void Scene::RenderAll(const LightSrc & sun)const{
 // draw objects from far to near in order to fit with alpha value
-	/*for (unsigned int j = 0; j < this->object_list.size(); j++) {
-		if (this->buf_for_sort[j]->distance < 40.0f) {
-			this->buf_for_sort[j]->instance_ptr->model->Render(0, this->buf_for_sort[j]->instance_ptr->model_mat,
-				sun, this->shadow_map, this->z_clip, this->projection_mat);
+	int instance_index = (int)this->object_list.size()-1;
+	for (int i = FRUSTUM_LEVEL-1; i >=0; i--) {
+		glClear(GL_DEPTH_BUFFER_BIT);
+		for (; instance_index >= 0; instance_index--) {
+			InstancePtrWithDist* ptr = this->buf_for_sort[instance_index];
+			if (ptr->distance < this->frustum_clip[i]) break;
+			ptr->instance_ptr->model->Render(ptr->distance < 40.0f?0:1, ptr->instance_ptr->model_mat,
+								this->projection_mat[i], sun, this->shadow_map);
 		}
-		else {
-			this->buf_for_sort[j]->instance_ptr->model->Render(1, this->buf_for_sort[j]->instance_ptr->model_mat,
-				sun, this->shadow_map, this->z_clip, this->projection_mat);
-		}
-	}*/
-//	cout << glGetError() << endl;
-	//this->background->Render(sun, this->shadow_map, this->z_clip, this->projection_mat);
+		this->background->Render(this->projection_mat[i], sun, this->shadow_map);
+	}
 	this->plane->Render(sun, this->shadow_map, this->projection_mat[0]);
 }
 
@@ -92,26 +88,24 @@ void Scene::CheckCollision() const{
 	for (unsigned int i = 0; i < this->plane->wrapper_num; i++) {
 		plane_wrappers[i] = this->plane->wrappers[i].Translate(translate_mat);
 	}
-	if (!plane->is_land) {
 	// check plane above the terrain
-		int yaw_abs = abs((int)this->plane->yaw);
-		int roll_abs = abs((int)this->plane->roll);
-		int pitch_abs = abs((int)this->plane->pitch);
-		
-		for (unsigned int k = 0; k < this->plane->wrapper_num; k++) {
-			for (vector<vec3>::iterator ptr = plane_wrappers[k].Vertices.begin(); ptr != plane_wrappers[k].Vertices.end(); ptr++) {
-				if (ptr->y() <= this->background->GetHeight(ptr->x(), ptr->z())) {
-					if (this->background->IsInAirport(ptr->x(),ptr->z()) && yaw_abs < 10 && roll_abs < 10 && pitch_abs < 10){
-						this->plane->is_land = true;
-						this->plane->YawBack();
-						this->plane->RollBack();
-						this->plane->PitchBack();
-						this->plane->position.y() = this->background->GetHeight(this->plane->position.x(), this->plane->position.z());
-						return;
-					}
-					else {
-						throw Collision();
-					}
+	int yaw_abs = abs((int)this->plane->yaw);
+	int roll_abs = abs((int)this->plane->roll);
+	int pitch_abs = abs((int)this->plane->pitch);
+	
+	for (unsigned int k = 0; k < this->plane->wrapper_num; k++) {
+		for (vector<vec3>::iterator ptr = plane_wrappers[k].Vertices.begin(); ptr != plane_wrappers[k].Vertices.end(); ptr++) {
+			if (ptr->y() <= this->background->GetHeight(ptr->x(), ptr->z())) {
+				if (this->background->IsInAirport(ptr->x(), ptr->z()) && yaw_abs < 10 && roll_abs < 10 && pitch_abs < 10) {
+					this->plane->is_land = true;
+					this->plane->YawBack();
+					this->plane->RollBack();
+					this->plane->PitchBack();
+					this->plane->position.y() = this->background->GetHeight(this->plane->position.x(), this->plane->position.z());
+					return;
+				}
+				else {
+					throw Collision();
 				}
 			}
 		}

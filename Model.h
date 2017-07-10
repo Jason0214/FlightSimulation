@@ -76,8 +76,8 @@ class StaticModel:public Model {
 public:
 	StaticModel():Model(GL_STATIC_DRAW, 2){}
 	~StaticModel(){}
-	virtual void Render(unsigned int level_index, const GLfloat*, const LightSrc & light, const DepthBuffer & depth_buffer, 
-		const GLfloat z_clip[], const GLfloat projection_mat[][16]) const;
+	virtual void Render(unsigned int level_index, const GLfloat model_mat[], const GLfloat projection_mat[],
+		const LightSrc & sun, const DepthBuffer & depth_buffer) const;
 	virtual void RenderFrame(unsigned int level_index, const GLfloat*, const Shader & frame_shader) const;
 protected:
 

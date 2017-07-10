@@ -6,7 +6,6 @@ in vec3 LightDirection;
 in vec4 ViewPosition;
 in vec4 LightSpacePosition;
 out vec4 color;
-flat in int level;
 
 uniform vec3 light_color;
 
@@ -70,12 +69,5 @@ void main(){
     }
     else{
         gl_FragDepth = 1.0f;
-    }
-
-    if(level != 0){
-        gl_FragDepth = 1.0f;
-    }
-    else{
-        gl_FragDepth = gl_FragCoord.z;
     }
 }

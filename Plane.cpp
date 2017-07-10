@@ -194,14 +194,7 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer
 	MeshData & current_mesh_set = this->data[0];
 	GLfloat matrix_buf[16];
 	this->shader.Use();
-	for (int i = 0; i < 16; i++) {
-		cout << projection_mat[i] << endl;
-	}
-	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
-	for (int i = 0; i < 16; i++) {
-		cout << matrix_buf[i] << " "<< projection_mat[i] << endl;
-	}
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
+	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 		glLoadMatrixf(depth_buffer.GetLightViewMatrix(0));

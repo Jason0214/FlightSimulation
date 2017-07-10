@@ -190,7 +190,6 @@ static void Display() {
 				0.0f, 1.0f, 0.0f);
 			skybox.Draw(plane->View().x(), plane->View().y(), plane->View().z());
 		}
-		glClear(GL_DEPTH_BUFFER_BIT);
 		scene.RenderAll(sun);
 	glutSwapBuffers();
 }
@@ -213,7 +212,6 @@ int main(int argc, char* argv[]) {
 	glutSpecialUpFunc(SpecialKeyRelease);
 	glutPassiveMotionFunc(MouseMove);
 	glutEntryFunc(ResetMouse);
-	scene.GenerateProjectionMatrix();
 	glutTimerFunc(RENDER_FREQUENCY, RenderTimer, 0);
 	glutTimerFunc(COLLISION_FREQUENCY, CollisionDetect, 0);
 	glutMainLoop();
@@ -313,6 +311,7 @@ static void CollisionDetect(int timer_id) {
 static void ChangeSize(int width, int height) {
 	scene.window_height = height;
 	scene.window_width = width;
+	scene.GenerateProjectionMatrix(width, height);
 	glViewport(0, 0, (GLuint)width, (GLuint)height);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
