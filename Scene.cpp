@@ -10,7 +10,7 @@ static int comp(const void* a, const void* b) {
 	return (int)((*(InstancePtrWithDist**)a)->distance - (*(InstancePtrWithDist**)b)->distance);
 }
 
-Scene::Scene():shadow_map(1024, 1024){
+Scene::Scene():shadow_map(){
 	this->background = NULL;
 	this->plane = NULL;
 	this->buf_for_sort = NULL;
@@ -47,32 +47,52 @@ void Scene::GenerateProjectionMatrix(GLuint width, GLuint height) {
 	glViewport(0, 0, width, height);
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	for (int i = 0; i < FRUSTUM_LEVEL; i++) {
+	for (int i = 0; i < FRUSTUM_NUM; i++) {
 		glLoadIdentity();
 		gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, this->frustum_clip[i], this->frustum_clip[i+1]);
-		glGetFloatv(GL_PROJECTION_MATRIX, this->projection_mat[i]);
+		glGetFloatv(GL_PROJECTION_MATRIX, this->projection_matrix[i]);
 	}
 	glPopMatrix();
 }
 
-void Scene::RenderAll(const LightSrc & sun)const{
+void Scene::RenderAll(const LightSrc & sun, const vec3 & center){
+// render shadow map
+	this->GenerateShadowMap(sun.direction, center);
 // draw objects from far to near in order to fit with alpha value
 	int instance_index = (int)this->object_list.size()-1;
-	for (int i = FRUSTUM_LEVEL-1; i >=0; i--) {
+	for (int i = FRUSTUM_NUM -1; i >=0; i--) {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		for (; instance_index >= 0; instance_index--) {
 			InstancePtrWithDist* ptr = this->buf_for_sort[instance_index];
 			if (ptr->distance < this->frustum_clip[i]) break;
-			ptr->instance_ptr->model->Render(ptr->distance < 40.0f?0:1, ptr->instance_ptr->model_mat,
-								this->projection_mat[i], sun, this->shadow_map);
+			ptr->instance_ptr->model->Render(ptr->distance < 40.0f?0:1, ptr->instance_ptr->model_matrix,
+								this->projection_matrix[i], sun, this->shadow_map);
 		}
-		this->background->Render(this->projection_mat[i], sun, this->shadow_map);
+		this->background->Render(this->projection_matrix[i], sun, this->shadow_map);
 	}
-	this->plane->Render(sun, this->shadow_map, this->projection_mat[0]);
+	this->plane->Render(sun, this->shadow_map, this->projection_matrix[0]);
 }
 
-void Scene::GenerateShadowMap(){
-	
+void Scene::RenderFrame(GLuint frustum_index) {
+	for (unsigned int i = 0; i < this->object_list.size(); i++) {
+		InstancePtrWithDist* ptr = this->buf_for_sort[i];
+		if (ptr->distance > this->frustum_clip[frustum_index+1]) break;
+		if (ptr->distance > this->frustum_clip[frustum_index]) {
+			ptr->instance_ptr->model->RenderFrame(0, ptr->instance_ptr->model_matrix,
+				this->projection_matrix[frustum_index], this->shadow_map.shader);
+		}
+	}
+}
+
+void Scene::GenerateShadowMap(const vec3 & light_direction, const vec3 & center){
+	GLfloat view_matrix[16];
+	glMatrixMode(GL_MODELVIEW);
+	glGetFloatv(GL_MODELVIEW_MATRIX, view_matrix);
+	for (int i = 0; i < CASCADE_NUM; i++) {
+		this->shadow_map.BufferWriteConfig(light_direction, center, i, view_matrix);
+		this->RenderFrame(0);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Scene::CheckCollision() const{
@@ -119,7 +139,7 @@ void Scene::CheckCollision() const{
 				int v_num = this->plane->wrapper_num;
 				for (int k = 0; k < k_num; k++) {
 					for (int v = 0; v < v_num; v++) {
-						if (OBBdetection(plane_wrappers[v], model_list[k]->model->wrappers[k].Translate(mat4(model_list[k]->model_mat)))) {
+						if (OBBdetection(plane_wrappers[v], model_list[k]->model->wrappers[k].Translate(mat4(model_list[k]->model_matrix)))) {
 							throw Collision();
 						}
 					}

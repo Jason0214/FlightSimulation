@@ -78,7 +78,8 @@ public:
 	~StaticModel(){}
 	virtual void Render(unsigned int level_index, const GLfloat model_mat[], const GLfloat projection_mat[],
 		const LightSrc & sun, const DepthBuffer & depth_buffer) const;
-	virtual void RenderFrame(unsigned int level_index, const GLfloat*, const Shader & frame_shader) const;
+	virtual void RenderFrame(unsigned int level_index, const GLfloat model_mat[], 
+		const GLfloat projection_mat[], const Shader & frame_shader) const;
 protected:
 
 };

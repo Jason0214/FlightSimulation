@@ -161,15 +161,15 @@ void StaticModel::Render(unsigned int level_index,const GLfloat model_mat[], con
 	glPopMatrix();
 }
 
-void StaticModel::RenderFrame(unsigned int level_index,const GLfloat* model_mat,const Shader & frame_shader) const {
+void StaticModel::RenderFrame(unsigned int level_index, const GLfloat model_mat[], 
+					const GLfloat projection_mat[], const Shader & frame_shader) const {
 	glMatrixMode(GL_MODELVIEW);
 	GLfloat matrix_buf[16];
 	glPushMatrix();
 		glMultMatrixf(model_mat);
-		glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
 		MeshData & current_mesh_set = this->data[level_index];
 		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
 			current_mesh_set.meshes[i].render(this->shader.ProgramID);

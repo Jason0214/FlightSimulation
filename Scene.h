@@ -11,7 +11,7 @@
 #define MAP_SIDE_NUM 1000
 #define SCENE_LEN (2000.0f)
 
-#define FRUSTUM_LEVEL 2
+#define FRUSTUM_NUM 2
 
 class Instance{
 public:
@@ -23,15 +23,15 @@ public:
 		glTranslatef(position[0], position[1], position[2]);
 		if (angle != 0.0f)
 			glRotatef(angle, pivot[0], pivot[1], pivot[2]);
-		glGetFloatv(GL_MODELVIEW_MATRIX, this->model_mat);
+		glGetFloatv(GL_MODELVIEW_MATRIX, this->model_matrix);
 		glPushMatrix();
 	}
 	Instance(const Instance & instance):position(instance.position) {
 		this->model = instance.model;
-		memcpy(this->model_mat, instance.model_mat, 16 * sizeof(GLfloat));
+		memcpy(this->model_matrix, instance.model_matrix, 16 * sizeof(GLfloat));
 	}
 	~Instance() {}
-	GLfloat model_mat[16];
+	GLfloat model_matrix[16];
 	vec3 position;
 	StaticModel* model;
 };
@@ -52,8 +52,7 @@ public:
 	void AppendObject(vec3 & position, StaticModel* instance, vec3 & rotate = vec3(0.0f,0.0f,0.0f), float angle = 0.0f);
 	void Arrange(const vec3 & camera_front,const vec3 & camera_position);
 
-	void RenderAll(const LightSrc & sun)const;
-	void GenerateShadowMap();
+	void RenderAll(const LightSrc & sun, const vec3 & center);
 	void GenerateProjectionMatrix(GLuint width, GLuint height);
 	void CheckCollision() const;
 	bool OBBdetection(Wrapper & a, Wrapper & b)const;
@@ -65,11 +64,14 @@ public:
 	GLint window_width;
 	GLint window_height;
 private:
+	void GenerateShadowMap(const vec3 & light_direction, const vec3 & center);
+	void RenderFrame(GLuint frustum_index);
+
 	std::vector<Instance*> object_list;
 	std::vector<Instance*> object_grid_map[MAP_SIDE_NUM][MAP_SIDE_NUM];
-	GLfloat projection_mat[FRUSTUM_LEVEL][16];
+	GLfloat projection_matrix[FRUSTUM_NUM][16];
 
 	InstancePtrWithDist** buf_for_sort;  //XXX: better to be self-built
 
-	const GLfloat frustum_clip[FRUSTUM_LEVEL + 1] = { 1.0f, 500.0f, 2500.0f};
+	const GLfloat frustum_clip[FRUSTUM_NUM + 1] = { 1.0f, 500.0f, 2500.0f};
 };
