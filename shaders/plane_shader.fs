@@ -5,13 +5,14 @@ in vec3 Normal;
 in vec3 LightDirection;
 in vec4 ViewPosition;
 in vec4 LightSpacePosition;
+in flat int light_space_level;
 out vec4 color;
 
 uniform float specular_strength;
 uniform sampler2D specular_texture;
 uniform sampler2D diffuse_texture;
 
-uniform sampler2D depth_map;
+uniform sampler2D shadow_map[2];
 
 uniform vec3 light_color;
 
@@ -23,7 +24,7 @@ float CalculateShadow(vec4 LightSpacePosition){
     if( 0.0f < depth_texture_coords.x && depth_texture_coords.x < 1.0f 
 && 0.0f < depth_texture_coords.y && depth_texture_coords.y < 1.0f
 && 0.0f < depth_texture_coords.z &&  depth_texture_coords.z < 1.0f){
-        float closest_depth = texture(depth_map, depth_texture_coords.xy).r;
+        float closest_depth = texture(shadow_map[light_space_level], depth_texture_coords.xy).r;
         float current_depth = depth_texture_coords.z;
         float bias = max(0.05 * (1.0 - dot(Normal, LightDirection)), 0.005f); 
         shadow_value = current_depth - bias > closest_depth ? 1.0f : 0.0f;    

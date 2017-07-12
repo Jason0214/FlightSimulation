@@ -49,7 +49,10 @@ public:
 	}
 	void FreeAll();
 
-	void AppendObject(vec3 & position, StaticModel* instance, vec3 & rotate = vec3(0.0f,0.0f,0.0f), float angle = 0.0f);
+	void AppendObject(vec3 & position, 
+					StaticModel* instance, 
+					vec3 & rotate = vec3(0.0f,0.0f,0.0f), 
+					float angle = 0.0f);
 	void Arrange(const vec3 & camera_front,const vec3 & camera_position);
 
 	void RenderAll(const LightSrc & sun, const vec3 & center);
@@ -71,7 +74,7 @@ private:
 	std::vector<Instance*> object_grid_map[MAP_SIDE_NUM][MAP_SIDE_NUM];
 	GLfloat projection_matrix[FRUSTUM_NUM][16];
 
-	InstancePtrWithDist** buf_for_sort;  //XXX: better to be self-built
+	InstancePtrWithDist** buf_for_sort;
 
 	const GLfloat frustum_clip[FRUSTUM_NUM + 1] = { 1.0f, 500.0f, 2500.0f};
 };

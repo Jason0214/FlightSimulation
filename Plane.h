@@ -7,7 +7,7 @@ public:
 	PlaneModel(vec3 origin_position);
 	~PlaneModel(){}
 	void Render(const LightSrc & light, const DepthBuffer & depth_buffer, const GLfloat []) const;
-	void RenderFrame(const Shader & frame_shader) const;
+	void RenderFrame(const GLfloat projection_matrix[], const Shader & frame_shader) const;
 
 	bool is_land;
 	bool is_crash;
@@ -42,7 +42,6 @@ public:
 	void SpeedDown();
 
 	void Forward();
-	void Translate()const;
 
 	vec3 View() {
 		vec3 temp = this->position - normalize(vec3(this->front.x(),0.0f,this->front.z()))*12.0f;

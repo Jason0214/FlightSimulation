@@ -65,7 +65,7 @@ void Scene::RenderAll(const LightSrc & sun, const vec3 & center){
 		for (; instance_index >= 0; instance_index--) {
 			InstancePtrWithDist* ptr = this->buf_for_sort[instance_index];
 			if (ptr->distance < this->frustum_clip[i]) break;
-			ptr->instance_ptr->model->Render(ptr->distance < 40.0f?0:1, ptr->instance_ptr->model_matrix,
+			ptr->instance_ptr->model->Render(ptr->distance < 40.0f ? 0 : 1, ptr->instance_ptr->model_matrix,
 								this->projection_matrix[i], sun, this->shadow_map);
 		}
 		this->background->Render(this->projection_matrix[i], sun, this->shadow_map);
@@ -78,21 +78,25 @@ void Scene::RenderFrame(GLuint frustum_index) {
 		InstancePtrWithDist* ptr = this->buf_for_sort[i];
 		if (ptr->distance > this->frustum_clip[frustum_index+1]) break;
 		if (ptr->distance > this->frustum_clip[frustum_index]) {
-			ptr->instance_ptr->model->RenderFrame(0, ptr->instance_ptr->model_matrix,
+			ptr->instance_ptr->model->RenderFrame(ptr->distance < 40.0f ? 0 : 1, ptr->instance_ptr->model_matrix,
 				this->projection_matrix[frustum_index], this->shadow_map.shader);
 		}
 	}
+	this->background->RenderFrame(this->projection_matrix[frustum_index], this->shadow_map.shader);
+	this->plane->RenderFrame(this->projection_matrix[frustum_index], this->shadow_map.shader);
 }
 
 void Scene::GenerateShadowMap(const vec3 & light_direction, const vec3 & center){
 	GLfloat view_matrix[16];
-	glMatrixMode(GL_MODELVIEW);
 	glGetFloatv(GL_MODELVIEW_MATRIX, view_matrix);
+	this->shadow_map.BufferWriteConfig(light_direction, center, view_matrix);
 	for (int i = 0; i < CASCADE_NUM; i++) {
-		this->shadow_map.BufferWriteConfig(light_direction, center, i, view_matrix);
+		glBindFramebuffer(GL_FRAMEBUFFER, this->shadow_map.GetFrameBuffer(i));
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		this->RenderFrame(0);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0, 0, this->window_width, this->window_height);
 }
 
 void Scene::CheckCollision() const{
@@ -100,7 +104,8 @@ void Scene::CheckCollision() const{
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	this->plane->Translate();
+	glTranslatef(plane->position[0], plane->position[1], plane->position[2]);
+	glMultMatrixf(plane->posture_mat);
 	glGetFloatv(GL_MODELVIEW_MATRIX, buf);
 	glPopMatrix();
 	mat4 translate_mat(buf);

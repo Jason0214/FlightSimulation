@@ -172,10 +172,7 @@ static void Display() {
 	else{
 		scene.Arrange(plane->position - plane->View(), plane->View());
 	}
-		//glViewport(0, 0, shadowMap.map_width, shadowMap.map_height);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0, scene.window_width, scene.window_height);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		if (STATUS == CAMERA) {
@@ -190,7 +187,7 @@ static void Display() {
 				0.0f, 1.0f, 0.0f);
 			skybox.Draw(plane->View().x(), plane->View().y(), plane->View().z());
 		}
-		scene.RenderAll(sun);
+		scene.RenderAll(sun, plane->position);
 	glutSwapBuffers();
 }
 
@@ -201,7 +198,10 @@ int main(int argc, char* argv[]) {
 	glutInitWindowSize(800, 600);
 	glutCreateWindow("FlightSimluation");
 	glewExperimental = GL_TRUE;
-	glewInit();
+	GLenum glewError = glewInit();
+	if (glewError != GLEW_OK) {
+		cout << "GLEW INIT ERROR:" << glewError << endl;
+	}
 	//
 	init();
 	glutReshapeFunc(ChangeSize);

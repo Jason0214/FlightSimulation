@@ -185,32 +185,20 @@ void PlaneModel::PitchBack() {
 	this->pitch = 0.0f;
 }
 
-void PlaneModel::Translate()const{
-	glTranslatef(this->position[0], this->position[1], this->position[2]);
-	glMultMatrixf(this->posture_mat);
-}
-
-void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer, const GLfloat projection_mat[]) const {
+void PlaneModel::Render(const LightSrc & light, const DepthBuffer & shadow_map, const GLfloat projection_mat[]) const {
 	MeshData & current_mesh_set = this->data[0];
 	GLfloat matrix_buf[16];
 	this->shader.Use();
+	shadow_map.BufferReadConfig(this->shader);
 	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-		glLoadMatrixf(depth_buffer.GetLightViewMatrix(0));
-		this->Translate();
-		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view"), 1, GL_FALSE, matrix_buf);
+	glTranslatef(this->position[0], this->position[1], this->position[2]);
+	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 	glPopMatrix();
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_projection"), 1, GL_FALSE, depth_buffer.GetLightProjectMatrix(0));
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(0));
-	glUniform1i(glGetUniformLocation(this->shader.ProgramID, "depth_map"), 0);
-	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), light.direction[0], light.direction[1], light.direction[2]);
-	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), light.color[0], light.color[1], light.color[2]);
+	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);;
 	glPushMatrix();
-	this->Translate();
-
+		glLoadMatrixf(this->posture_mat);
 	// if the plane is crashed, randomly split the model
 	if (!this->is_crash) {
 		glPushMatrix();
@@ -218,7 +206,7 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer
 			glRotatef(this->fan_spin, aCos(12), aSin(12), 0.0f);
 			glTranslatef(-0.393f, -0.928f, 0.0f);
 			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, matrix_buf);
 			current_mesh_set.meshes[FAN].render(this->shader.ProgramID);
 		glPopMatrix();
 		if (this->yaw > 5.0f || this->yaw < -5.0f) {
@@ -227,13 +215,13 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer
 				glRotatef(this->yaw > 0.0f ? 45.0f : -45.0f, -0.208f, -0.978f, 0.0f);
 				glTranslatef(2.524f, -0.425f, -0.028f);
 				glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-				glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+				glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, matrix_buf);
 				current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
 			glPopMatrix();
 		}
 		else {
 			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, matrix_buf);
 			current_mesh_set.meshes[YAW_FIN].render(this->shader.ProgramID);
 		}
 		if (this->pitch > 5.0f || this->pitch < -5.0f) {
@@ -242,17 +230,17 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer
 				glRotatef(this->pitch > 0.0f ? 30.0f : -30.0f, 0.0f, 0.0f, 1.0f);
 				glTranslatef(2.524f, -0.426f, 0.0f);
 				glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-				glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+				glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, matrix_buf);
 				current_mesh_set.meshes[PITCH_FIN].render(this->shader.ProgramID);
 			glPopMatrix();
 		}
 		else {
 			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, matrix_buf);
 			current_mesh_set.meshes[PITCH_FIN].render(this->shader.ProgramID);
 		}
 		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, matrix_buf);
 		current_mesh_set.meshes[BODY].render(this->shader.ProgramID);
 		current_mesh_set.meshes[LEFT_WHEEL].render(this->shader.ProgramID);
 		current_mesh_set.meshes[RIGHT_WHEEL].render(this->shader.ProgramID);
@@ -268,7 +256,7 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer
 			glRotatef(RandFloat() * 60, RandFloat(), RandFloat(), RandFloat());
 			glTranslatef(RandFloat() * 5, RandFloat(), RandFloat() * 5);
 			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, matrix_buf);
 			current_mesh_set.meshes[i].render(this->shader.ProgramID);
 			glPopMatrix();
 		}
@@ -276,18 +264,20 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & depth_buffer
 	glPopMatrix();
 }
 
-void PlaneModel::RenderFrame(const Shader & frame_shader) const {
+void PlaneModel::RenderFrame(const GLfloat projection_matrix[], const Shader & frame_shader) const {
 	MeshData & current_mesh_set = this->data[0];
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
 	GLfloat matrix_buf[16];
-	this->Translate();
-	glGetFloatv(GL_PROJECTION_MATRIX, matrix_buf);
-	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, matrix_buf);
 	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, projection_matrix);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+		glLoadMatrixf(this->posture_mat);
+		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+		glTranslatef(this->position[0], this->position[1], this->position[2]);
+		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "model"), 1, GL_FALSE, matrix_buf);
+	glPopMatrix();
 	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
 		current_mesh_set.meshes[i].render_frame(frame_shader.ProgramID);
 	}
-	glPopMatrix();
 }

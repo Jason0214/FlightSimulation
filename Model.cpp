@@ -1,6 +1,5 @@
 #include "Model.h"
 #include "Exception.h"
-#include <sstream>
 #include <string>
 
 using namespace std;
@@ -109,70 +108,33 @@ void Model::Load(string path, unsigned int level_index) {
 }
 
 void StaticModel::Render(unsigned int level_index,const GLfloat model_mat[], const GLfloat projection_mat[], 
-								const LightSrc & sun, const DepthBuffer & depth_buffer) const{
-	glMatrixMode(GL_MODELVIEW);
+								const LightSrc & sun, const DepthBuffer & shadow_map) const{
 	GLfloat matrix_buf[16];
-	glPushMatrix();
-		glMultMatrixf(model_mat);
-		this->shader.Use();
-		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
-		// pass in shadow texture	
-			//glPushMatrix();
-			//	glLoadMatrixf(depth_buffer.GetLightViewMatrix(0));
-			//	glMultMatrixf(model_mat);
-			//	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-			//	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view[0]"), 1, GL_FALSE, matrix_buf);
-			//glPopMatrix();
-			//glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_project[0]"), 1, GL_FALSE, depth_buffer.GetLightProjectMatrix(0));
-			//glActiveTexture(GL_TEXTURE4); // reserve 4 textures for diffuse and specular
-			//glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(0));
-			//glUniform1i(glGetUniformLocation(this->shader.ProgramID, "shadow_map[0]"), 4);
-			//
-			//glPushMatrix();
-			//	glLoadMatrixf(depth_buffer.GetLightViewMatrix(1));
-			//	glMultMatrixf(model_mat);
-			//	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-			//	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view[1]"), 1, GL_FALSE, matrix_buf);
-			//glPopMatrix();
-			//glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_project[1]"), 1, GL_FALSE, depth_buffer.GetLightProjectMatrix(1));
-			//glActiveTexture(GL_TEXTURE5); // reserve 4 textures for diffuse and specular
-			//glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(1));
-			//glUniform1i(glGetUniformLocation(this->shader.ProgramID, "shadow_map[1]"), 5);
-			//
-			//glPushMatrix();
-			//	glLoadMatrixf(depth_buffer.GetLightViewMatrix(2));
-			//	glMultMatrixf(model_mat);
-			//	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-			//	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_view[2]"), 1, GL_FALSE, matrix_buf);
-			//glPopMatrix();
-			//glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "light_space_project[2]"), 1, GL_FALSE, depth_buffer.GetLightProjectMatrix(2));
-			//glActiveTexture(GL_TEXTURE6); // reserve 4 textures for diffuse and specular
-			//glBindTexture(GL_TEXTURE_2D, depth_buffer.GetDepthTextureID(2));
-			//glUniform1i(glGetUniformLocation(this->shader.ProgramID, "shadow_map[2]"), 6);
-		// pass in light param
-		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
-		glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);
-		MeshData & current_mesh_set = this->data[level_index];
-		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
-			current_mesh_set.meshes[i].render(this->shader.ProgramID);
-		}
-	glPopMatrix();
+	this->shader.Use();
+	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
+	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, model_mat);
+	// pass in shadow texture	
+	shadow_map.BufferReadConfig(this->shader);
+	// pass in light param
+	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
+	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);
+	MeshData & current_mesh_set = this->data[level_index];
+	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
+		current_mesh_set.meshes[i].render(this->shader.ProgramID);
+	}
 }
 
 void StaticModel::RenderFrame(unsigned int level_index, const GLfloat model_mat[], 
 					const GLfloat projection_mat[], const Shader & frame_shader) const {
-	glMatrixMode(GL_MODELVIEW);
 	GLfloat matrix_buf[16];
-	glPushMatrix();
-		glMultMatrixf(model_mat);
-		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-		glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
-		MeshData & current_mesh_set = this->data[level_index];
-		for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
-			current_mesh_set.meshes[i].render(this->shader.ProgramID);
-		}
-	glPopMatrix();
+	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
+	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "model"), 1, GL_FALSE, model_mat);
+	MeshData & current_mesh_set = this->data[level_index];
+	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
+		current_mesh_set.meshes[i].render(this->shader.ProgramID);
+	}
 }
