@@ -8,7 +8,7 @@
 
 //#define DEPTH_BUFFER_TEST
 
-#define CASCADE_NUM 2 // must keep consistent with cascade number in shader
+#define MAX_CASCADE 3 // must keep consistent with cascade number in shader
 
 class Scene;
 
@@ -18,10 +18,9 @@ public:
 	~DepthBuffer();
 	void BufferWriteConfig(const vec3 & light_dir,
 						   const vec3 & camera_position,
-						   GLfloat view_matrx[]);
+						   GLfloat aspect_ratio);
 	void BufferReadConfig(const Shader & shader)const;
 	void init(std::string vs_path, std::string fs_path);
-	void FrustumToOtho(GLfloat view_matrx[]);
 	GLuint GetFrameBuffer(int index) {
 		return this->FBO[index];
 	}
@@ -39,9 +38,17 @@ public:
 	GLuint test_VBO;
 #endif
 private:
+	void GenerateOtho(const vec3 & light_dir, 
+						const vec3 & camera_position, 
+						GLfloat aspect_ratio);
+	static const int CASCADE_NUM = 2;
+
 	GLfloat light_space_view[16];
-	GLfloat light_space_project[CASCADE_NUM][16];
+	GLfloat light_space_projection[CASCADE_NUM][16];
+
 	GLuint FBO[CASCADE_NUM];
 	GLuint depth_textureID[CASCADE_NUM];
-	GLfloat z_clip[CASCADE_NUM + 1] = { 1.0f, 20.0f, 500.0f};
+	GLint texture_index[MAX_CASCADE] = { 4, 5, 6 };
+
+	GLfloat z_clip[MAX_CASCADE + 1] = { 1.0f, 20.0f, 500.0f};
 };

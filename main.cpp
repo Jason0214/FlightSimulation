@@ -180,14 +180,15 @@ static void Display() {
 				camera.position.x() + camera.front.x(), camera.position.y() + camera.front.y(), 
 				camera.position.z() + camera.front.z(), camera.up.x(), camera.up.y(), camera.up.z());
 			skybox.Draw(camera.position.x(), camera.position.y(), camera.position.z());
+			scene.RenderAll(sun, camera.position);
 		}
 		else{
 			gluLookAt(plane->View().x(), plane->View().y(), plane->View().z(),
 				plane->position.x(), plane->position.y(), plane->position.z(),
 				0.0f, 1.0f, 0.0f);
 			skybox.Draw(plane->View().x(), plane->View().y(), plane->View().z());
+			scene.RenderAll(sun, plane->View());
 		}
-		scene.RenderAll(sun, plane->position);
 	glutSwapBuffers();
 }
 

@@ -55,7 +55,7 @@ public:
 					float angle = 0.0f);
 	void Arrange(const vec3 & camera_front,const vec3 & camera_position);
 
-	void RenderAll(const LightSrc & sun, const vec3 & center);
+	void RenderAll(const LightSrc & sun, const vec3 & camera_position);
 	void GenerateProjectionMatrix(GLuint width, GLuint height);
 	void CheckCollision() const;
 	bool OBBdetection(Wrapper & a, Wrapper & b)const;
@@ -67,7 +67,7 @@ public:
 	GLint window_width;
 	GLint window_height;
 private:
-	void GenerateShadowMap(const vec3 & light_direction, const vec3 & center);
+	void GenerateShadowMap(const vec3 & light_direction, const vec3 & camera_position, GLfloat aspect_ratio);
 	void RenderFrame(GLuint frustum_index);
 
 	std::vector<Instance*> object_list;
