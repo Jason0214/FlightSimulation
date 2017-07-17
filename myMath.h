@@ -3,9 +3,9 @@
 #include <cmath>
 #include <cstring>
 
-float aCos(float );
-float aSin(float );
-float aTan(float );
+float CosAngle(float );
+float SinAngle(float );
+float TanAngle(float );
 
 float Power(float x, int exp);
 
@@ -39,9 +39,8 @@ public:
 	float & operator[] (int index) { return this->value[index]; }
 	float operator[] (int index) const { return this->value[index]; }
 	vec4 operator* (float k) const;
-	vec4 operator/ (float k) const{
-		return *this * (1/k);
-	}
+	vec4 operator/ (float k) const;
+	void operator/= (float k);
 	vec4 operator+ (const vec4 & v) const;
 	vec4 & operator+=(const vec4 & v);
 	vec4 operator- (const vec4 & v) const;
@@ -86,9 +85,8 @@ public:
 	float & operator[] (int index) { return this->value[index]; }
 	float operator[] (int index) const { return this->value[index]; }
 	vec3 operator* (float k) const;
-	vec3 operator/ (float k) const{
-		return *this * (1/k);
-	}	
+	vec3 operator/ (float k) const;
+	void operator/= (float k);
 	vec3 operator+ (const vec3 & v) const;
 	vec3 & operator+=(const vec3 & v);
 	vec3 operator- (const vec3 & v) const;
@@ -124,9 +122,8 @@ public:
 	float & operator[] (int index) { return this->value[index]; }
 	float operator[] (int index) const { return this->value[index]; }
 	vec2 operator* (float k) const;
-	vec2 operator/ (float k) const{
-		return *this * (1/k);
-	}		
+	vec2 operator/ (float k) const;
+	void operator/= (float k);
 	vec2 operator+ (const vec2 & v) const;
 	vec2 & operator+=(const vec2 & v);
 	vec2 operator- (const vec2 & v) const;
@@ -137,9 +134,9 @@ private:
 	float value[2];
 };
 
-vec2 dot(vec2 v1, vec2 v2);
-vec3 dot(vec3 v1, vec3 v2);
-vec4 dot(vec4 v1, vec4 v2);
+vec2 dot(const vec2 & v1,const vec2 & v2);
+vec3 dot(const vec3 & v1,const vec3 & v2);
+vec4 dot(const vec4 & v1,const vec4 & v2);
 
 vec3 cross(const vec3 & v1, const vec3 & v2);
 
@@ -192,7 +189,12 @@ public:
 	float* operator[](int index){
 		return (float*)(&(this->value[index*4]));
 	}
+	const float* operator[](int index) const{
+		return (float*)(&(this->value[index * 4]));
+	}
 	vec4 operator*(const vec4 & v);
 private:
 	float value[16];
 };
+
+mat4 inverse(const mat4 & m);

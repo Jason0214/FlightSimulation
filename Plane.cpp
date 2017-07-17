@@ -79,7 +79,7 @@ void PlaneModel::Forward() {
 		up_speed = 0.0f;
 	}
 	else {
-		up_speed = 0.4 * this->speed * this->speed  - 0.02 * aCos(this->pitch);
+		up_speed = 0.4 * this->speed * this->speed  - 0.02 * CosAngle(this->pitch);
 	}
 	this->position = this->position + this->front * this->speed + this->up * up_speed;
 }
@@ -203,7 +203,7 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & shadow_map, 
 	if (!this->is_crash) {
 		glPushMatrix();
 			glTranslatef(0.393f, 0.928f, 0.0f);
-			glRotatef(this->fan_spin, aCos(12), aSin(12), 0.0f);
+			glRotatef(this->fan_spin, CosAngle(12), SinAngle(12), 0.0f);
 			glTranslatef(-0.393f, -0.928f, 0.0f);
 			glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 			glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, matrix_buf);

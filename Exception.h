@@ -49,3 +49,7 @@ class WarningBoard: public GameException {
 class ReachBoard : public GameException {
 
 };
+
+class NoInverseMatrix : public Exception {
+
+};

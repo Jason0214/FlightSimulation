@@ -1,12 +1,12 @@
 #include "myMath.h"
 const static float RAD_PER_DEGREE = 3.1415926f/180;
-float aCos(float theta) {
+float CosAngle(float theta) {
 	return cos((theta)*RAD_PER_DEGREE);
 }
-float aSin(float theta) {
+float SinAngle(float theta) {
 	return sin((theta)*RAD_PER_DEGREE);
 }
-float aTan(float theta) {
+float TanAngle(float theta) {
 	return tan((theta)*RAD_PER_DEGREE);
 }
 
@@ -51,6 +51,12 @@ static inline void _assign(float* des,const float* src, int len) {
 static inline void vec_multi(float* des,const float* src, float k, int len) {
 	for (int i = 0; i < len; i++) {
 		des[i] = src[i] * k;
+	}
+}
+
+static inline void vec_div(float* des, const float* src, float k, int len) {
+	for (int i = 0; i < len; i++) {
+		des[i] = src[i] / k;
 	}
 }
 
@@ -167,6 +173,35 @@ vec4 & vec4::operator= (const vec4 & v) {
 	}
 	return *this;
 }
+vec4 vec4::operator/ (float k) const{
+	vec4 ret;
+	vec_div(ret.data(), this->data(), k, 4);
+	return ret;
+}
+
+vec3 vec3::operator/ (float k) const {
+	vec3 ret;
+	vec_div(ret.data(), this->data(), k, 3);
+	return ret;
+}
+
+vec2 vec2::operator/ (float k) const {
+	vec2 ret;
+	vec_div(ret.data(), this->data(), k, 2);
+	return ret;
+}
+
+void vec4::operator/= (float k){
+	vec_div(this->data(), this->data(), k, 4);
+}
+
+void vec3::operator/= (float k) {
+	vec_div(this->data(), this->data(), k, 3);
+}
+
+void vec2::operator/= (float k) {
+	vec_div(this->data(), this->data(), k, 2);
+}
 
 
 vec2 normalize(const vec2 & v){
@@ -239,4 +274,64 @@ vec4 mat4::operator*(const vec4 & v) {
 		}
 	}
 	return ret;
+}
+
+mat4 inverse(const mat4 & m) {
+	// gauss method
+	// reference: http://blog.csdn.net/zhurui_idea/article/details/24864155
+	mat4 t = m;
+	mat4 ret;
+	int k;
+	float temp;
+	for (int i = 0; i < 4; i++)
+	{ 
+		float max = t[i][i];
+		k = i;
+		for (int j = i + 1; j < 4; j++)
+		{
+			if (fabs(t[i][j]) > fabs(max))
+			{
+				max = t[i][j];
+				k = j;
+			}
+		}
+		//如果主元所在行不是第i行，进行行交换  
+		if (k != i)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				temp = t[j][i];
+				t[j][i] = t[j][i];
+				t[j][k] = temp;
+
+				temp = ret[j][i];
+				ret[j][i] = ret[j][k];
+				ret[j][k] = temp;
+			}
+		}
+		//判断主元是否为0, 若是, 则矩阵A不是满秩矩阵,不存在逆矩阵  
+		if (t[i][i] == 0)
+		{
+			throw NoInverseMatrix();
+		}
+		//消去A的第i列除去i行以外的各行元素  
+		temp = t[i][i];
+		for (int j = 0; j < 4; j++)
+		{
+			t[j][i] = t[j][i] / temp;        //主对角线上的元素变为1  
+			ret[j][i] = ret[j][i] / temp;        //伴随计算  
+		}
+		for (int j = 0; j < 4; j++)        //第0行->第n行  
+		{
+			if (j != i)                //不是第i行  
+			{
+				temp = t[j][i];
+				for (k = 0; k < 4; k++)        //第j行元素 - i行元素*j列i行元素  
+				{
+					t[k][j] = t[k][j] - t[k][i] * temp;
+					ret[k][j] = ret[k][j] - ret[k][i] * temp;
+				}
+			}
+		}
+	}
 }

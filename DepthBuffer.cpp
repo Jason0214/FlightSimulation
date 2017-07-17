@@ -19,7 +19,7 @@ void DepthBuffer::BufferWriteConfig(const vec3 & light_dir, const vec3 & camera_
 	gluLookAt(0.0f, 0.0f, 0.0f, -light_dir[0], -light_dir[1], -light_dir[2],  0.0f, 1.0f, 0.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, this->light_space_view);
 	glPopMatrix();
-	this->GenerateOtho(light_dir, camera_position, aspect_ratio);
+	this->GenerateOrtho(light_dir, camera_position, aspect_ratio);
 }
 
 void DepthBuffer::BufferReadConfig(const Shader & shader) const{
@@ -32,7 +32,7 @@ void DepthBuffer::BufferReadConfig(const Shader & shader) const{
 	glUniform1iv(glGetUniformLocation(shader.ProgramID, "shadow_map"), CASCADE_NUM, this->texture_index);
 }
 
-void DepthBuffer::GenerateOtho(const vec3 & light_dir, const vec3 & camera_position, GLfloat aspect_ratio) {
+void DepthBuffer::GenerateOrtho(const vec3 & light_dir, const vec3 & camera_position, GLfloat aspect_ratio) {
 	GLfloat buf[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, buf);
 	mat4 light_view_matrix(buf);
@@ -43,8 +43,8 @@ void DepthBuffer::GenerateOtho(const vec3 & light_dir, const vec3 & camera_posit
 		// translate the light vector to z pivot
 		glLoadMatrixf(&(light_view_matrix[0][0]));
 		vec3 pivot = cross(light_dir, vec3(0, 0, -1));
-		glRotatef(acos(dot(light_dir, vec3(0, 0, -1))/module(light_dir)), pivot[0], pivot[1], pivot[2]);
-		glTranslatef(camera_positionp[0], camera_positionp[1], camera_positionp[2]);
+		glRotatef(acos(light_dir * vec3(0, 0, -1)/module(light_dir)), pivot[0], pivot[1], pivot[2]);
+		glTranslatef(camera_position[0], camera_position[1], camera_position[2]);
 		glGetFloatv(GL_MODELVIEW_MATRIX, buf);
 	glPopMatrix();
 	light_view_matrix = mat4(buf);
@@ -72,28 +72,30 @@ void DepthBuffer::GenerateOtho(const vec3 & light_dir, const vec3 & camera_posit
 			frustum_world_position[j] /= frustum_world_position[j].w();
 		}
 
-		GLfloat otho_params[6] = {
-			frustum_world_position[0].x();
-			frustum_world_position[0].y();
-			frustum_world_position[0].x();
-			frustum_world_position[0].y();
-			frustum_world_position[0].z();
-			frustum_world_position[0].z();															
-		}
+		GLfloat ortho_params[6] = {
+			frustum_world_position[0].x(),
+			frustum_world_position[0].y(),
+			frustum_world_position[0].x(),
+			frustum_world_position[0].y(),
+			frustum_world_position[0].z(),
+			frustum_world_position[0].z(),
+		};
 
 		for(int j = 1; j < 8; j++){
-			if(otho_params[0] > frustum_world_position[j].x()) otho_params[0] = frustum_world_position[j].x();
-			if(otho_params[1] < frustum_world_position[j].y()) otho_params[1] = frustum_world_position[j].y();
-			if(otho_params[2] < frustum_world_position[j].x()) otho_params[2] = frustum_world_position[j].x();
-			if(otho_params[3] > frustum_world_position[j].y()) otho_params[3] = frustum_world_position[j].y();
-			if(otho_params[4] > frustum_world_position[j].z()) otho_params[4] = frustum_world_position[j].z();
-			if(otho_params[5] < frustum_world_position[j].z()) otho_params[5] = frustum_world_position[j].z();															
+			if(ortho_params[0] > frustum_world_position[j].x()) ortho_params[0] = frustum_world_position[j].x();
+			if(ortho_params[1] < frustum_world_position[j].y()) ortho_params[1] = frustum_world_position[j].y();
+			if(ortho_params[2] < frustum_world_position[j].x()) ortho_params[2] = frustum_world_position[j].x();
+			if(ortho_params[3] > frustum_world_position[j].y()) ortho_params[3] = frustum_world_position[j].y();
+			if(ortho_params[4] > frustum_world_position[j].z()) ortho_params[4] = frustum_world_position[j].z();
+			if(ortho_params[5] < frustum_world_position[j].z()) ortho_params[5] = frustum_world_position[j].z();
 		}
 		glViewport(0, 0, this->map_width, this->map_height);
 		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
 		glLoadIdentity();
-		glOtho(otho_params[0], otho_params[1], otho_params[2], otho_params[3], otho_params[4], otho_params[5]);
+		glOrtho(ortho_params[0], ortho_params[1], ortho_params[2], ortho_params[3], ortho_params[4], ortho_params[5]);
 		glGetFloatv(GL_PROJECTION_MATRIX, this->light_space_projection[i]);
+		glPopMatrix();
 	}
 }
 

@@ -29,7 +29,7 @@ void Camera::reposition() {
 	if (this->pitch < -89.0f) this->pitch = -89.0f;
 //	if (this->yaw > 180.0f) this->yaw -= 360.0f;
 //	if (this->yaw < -180.0f) this->yaw += 360.0f;
-	this->front.x() = aCos(this->yaw)*aCos(this->pitch);
-	this->front.y() = aSin(this->pitch);
-	this->front.z() = aSin(this->yaw)*aCos(this->pitch);
+	this->front.x() = CosAngle(this->yaw)*CosAngle(this->pitch);
+	this->front.y() = SinAngle(this->pitch);
+	this->front.z() = SinAngle(this->yaw)*CosAngle(this->pitch);
 }

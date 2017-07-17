@@ -38,7 +38,7 @@ public:
 	GLuint test_VBO;
 #endif
 private:
-	void GenerateOtho(const vec3 & light_dir, 
+	void GenerateOrtho(const vec3 & light_dir, 
 						const vec3 & camera_position, 
 						GLfloat aspect_ratio);
 	static const int CASCADE_NUM = 2;
