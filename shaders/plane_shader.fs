@@ -46,11 +46,11 @@ void main(){
 
 // Specular
     vec3 specular;
-	if(specular_strength != 0.0f){
-		vec3 view_dir = -normalize(vec3(ViewPosition));
-		vec3 reflect_dir = normalize(reflect(-LightDirection, Normal));
-		specular = specular_strength * pow(max(dot(view_dir, reflect_dir), 0.0f), 32) * light_color * texture(specular_texture, TexCoords);
-	}
+    if(specular_strength != 0.0f){
+        vec3 view_dir = -normalize(vec3(ViewPosition));
+        vec3 reflect_dir = normalize(reflect(-LightDirection, Normal));
+        specular = specular_strength * pow(max(dot(view_dir, reflect_dir), 0.0f), 32) * light_color * texture(specular_texture, TexCoords);
+    }
     else{
         specular = vec3(0.0f);
     }
@@ -59,5 +59,5 @@ void main(){
     float shadow = CalculateShadow(LightSpacePosition);
 
 // get color which is the combination of ambient, diffuse and specular
-    color = vec4(ambient + (1.0f - shadow)*(diffuse + specular),1.0f);
+    color = vec4(ambient + (1.0f - shadow)*(diffuse + specular), 1.0f);
 }

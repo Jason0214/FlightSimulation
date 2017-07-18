@@ -36,8 +36,8 @@ void main()
 
 // translate normal vector
 	mat4 mat_view = transpose(inverse(view));
-    Normal = normalize(vec3(mat_view * vec4(normal,0.0f)));
-    LightDirection = vec3(mat_view * vec4(light_direction,0.0f));
+    Normal = normalize(vec3(mat_view * model * vec4(normal,0.0f)));
+    LightDirection = normalize(vec3(mat_view * vec4(light_direction,0.0f)));
 
 //  texture coordinates
     TexCoords = texCoords;

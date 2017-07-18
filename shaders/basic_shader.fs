@@ -46,11 +46,11 @@ void main(){
 
 // Specular
     vec3 specular;
-	if(specular_strength != 0.0f){
-		vec3 view_dir = -normalize(vec3(ViewPosition));
-		vec3 reflect_dir = normalize(reflect(-LightDirection, Normal));
-		specular = specular_strength * pow(max(dot(view_dir, reflect_dir), 0.0f), 32) * light_color * texture(specular_texture, TexCoords);
-	}
+    if(specular_strength != 0.0f){
+        vec3 view_dir = -normalize(vec3(ViewPosition));
+        vec3 reflect_dir = normalize(reflect(-LightDirection, Normal));
+        specular = specular_strength * pow(max(dot(view_dir, reflect_dir), 0.0f), 32) * light_color * texture(specular_texture, TexCoords);
+    }
     else{
         specular = vec3(0.0f);
     }

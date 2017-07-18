@@ -15,7 +15,7 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
-uniform float shadow_clip[2];
+uniform float shadow_clip[3];
 uniform mat4 light_space_projection[2];
 uniform mat4 light_space_view;
 
@@ -36,12 +36,13 @@ void main()
 
 // translate normal vector
 	mat4 mat_view = transpose(inverse(view));
-    Normal = normalize(vec3(mat_view * vec4(normal,0.0f)));
-    LightDirection = vec3(mat_view * vec4(light_direction,0.0f));
+    Normal = normalize(vec3(mat_view * model * vec4(normal, 0.0f)));
+    LightDirection = normalize(vec3(mat_view * vec4(light_direction, 0.0f)));
 
 //  texture coordinates
     TexCoords = texCoords; 
 
 // light space position, for shadow mapping
-	LightSpacePosition = light_space_projection[light_space_level] * light_space_view * vec4(position,1.0);
+	LightSpacePosition = light_space_projection[light_space_level]
+						 * light_space_view * model * vec4(position, 1.0);
 }
