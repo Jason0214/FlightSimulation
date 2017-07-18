@@ -157,6 +157,7 @@ class mat3{
 public:
 	mat3(){
 		memset(this->value,0,sizeof(float)*9);
+		for(int i = 0; i < 3; i++) (*this)[i][i] = 1.0f;
 	}
 	mat3(const mat3 & m);
 	mat3(const float* array);
@@ -182,6 +183,7 @@ class mat4{
 public:
 	mat4(){
 		memset(this->value,0,sizeof(float)*16);
+		for(int i = 0; i < 4; i++) (*this)[i][i] = 1.0f;
 	}
 	mat4(const float* array){
 		memcpy(this->value, array, sizeof(float) * 16);
@@ -193,6 +195,18 @@ public:
 		return (float*)(&(this->value[index * 4]));
 	}
 	vec4 operator*(const vec4 & v);
+	mat4 operator* (const mat4 & m){
+		mat4 ret;
+		for(int i = 0; i < 4; i++){
+			for(int j = 0; j < 4; j++){
+				ret[j][i] = 0;
+				for(int k = 0; k < 4; k++){
+					ret[j][i] += (*this)[k][i] * m[j][k];
+				}
+			}
+		}
+		return ret;
+	}
 private:
 	float value[16];
 };

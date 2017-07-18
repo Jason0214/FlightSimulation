@@ -30,6 +30,9 @@ public:
 	const GLuint map_height = 1024;
 	const float BASE_DIST = 10.0f;
 	const int RATIO = 50;
+
+	static const int CASCADE_NUM = 2;
+
 #ifdef DEPTH_BUFFER_TEST
 	void ShowTexture()const;
 	Shader test_shader;
@@ -41,7 +44,6 @@ private:
 	void GenerateOrtho(const vec3 & light_dir, 
 						const vec3 & camera_position, 
 						GLfloat aspect_ratio);
-	static const int CASCADE_NUM = 2;
 
 	GLfloat light_space_view[16];
 	GLfloat light_space_projection[CASCADE_NUM][16];

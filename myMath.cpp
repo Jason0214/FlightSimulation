@@ -1,4 +1,5 @@
 #include "myMath.h"
+#include "Exception.h"
 const static float RAD_PER_DEGREE = 3.1415926f/180;
 float CosAngle(float theta) {
 	return cos((theta)*RAD_PER_DEGREE);
@@ -295,38 +296,36 @@ mat4 inverse(const mat4 & m) {
 				k = j;
 			}
 		}
-		//如果主元所在行不是第i行，进行行交换  
 		if (k != i)
 		{
 			for (int j = 0; j < 4; j++)
 			{
 				temp = t[j][i];
-				t[j][i] = t[j][i];
+				t[j][i] = t[j][k];
 				t[j][k] = temp;
-
+			}
+			for(int j = 0; j < 4; j++){
 				temp = ret[j][i];
 				ret[j][i] = ret[j][k];
-				ret[j][k] = temp;
+				ret[j][k] = temp;				
 			}
 		}
-		//判断主元是否为0, 若是, 则矩阵A不是满秩矩阵,不存在逆矩阵  
 		if (t[i][i] == 0)
 		{
 			throw NoInverseMatrix();
 		}
-		//消去A的第i列除去i行以外的各行元素  
 		temp = t[i][i];
 		for (int j = 0; j < 4; j++)
 		{
-			t[j][i] = t[j][i] / temp;        //主对角线上的元素变为1  
-			ret[j][i] = ret[j][i] / temp;        //伴随计算  
+			t[j][i] = t[j][i] / temp;          
+			ret[j][i] = ret[j][i] / temp;  
 		}
-		for (int j = 0; j < 4; j++)        //第0行->第n行  
+		for (int j = 0; j < 4; j++)  
 		{
-			if (j != i)                //不是第i行  
+			if (j != i)            
 			{
-				temp = t[j][i];
-				for (k = 0; k < 4; k++)        //第j行元素 - i行元素*j列i行元素  
+				temp = t[i][j];
+				for (k = 0; k < 4; k++)         
 				{
 					t[k][j] = t[k][j] - t[k][i] * temp;
 					ret[k][j] = ret[k][j] - ret[k][i] * temp;
@@ -334,4 +333,5 @@ mat4 inverse(const mat4 & m) {
 			}
 		}
 	}
+	return ret;
 }

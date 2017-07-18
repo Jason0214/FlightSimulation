@@ -57,7 +57,7 @@ void Scene::GenerateProjectionMatrix(GLuint width, GLuint height) {
 
 void Scene::RenderAll(const LightSrc & sun, const vec3 & camera_position){
 // render shadow map
-	this->GenerateShadowMap(sun.direction, camera_position, this->width/this->height);
+	this->GenerateShadowMap(sun.direction, camera_position, this->window_width/this->window_height);
 // draw objects from far to near in order to fit with alpha value
 	int instance_index = (int)this->object_list.size()-1;
 	for (int i = FRUSTUM_NUM -1; i >=0; i--) {
@@ -88,7 +88,7 @@ void Scene::RenderFrame(GLuint frustum_index) {
 
 void Scene::GenerateShadowMap(const vec3 & light_direction, const vec3 & camera_position, GLfloat aspect_ratio){
 	this->shadow_map.BufferWriteConfig(light_direction, camera_position, aspect_ratio);
-	for (int i = 0; i < CASCADE_NUM; i++) {
+	for (int i = 0; i < DepthBuffer::CASCADE_NUM; i++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, this->shadow_map.GetFrameBuffer(i));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		this->RenderFrame(0);

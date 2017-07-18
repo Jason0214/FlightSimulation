@@ -44,7 +44,7 @@ void DepthBuffer::GenerateOrtho(const vec3 & light_dir, const vec3 & camera_posi
 		glLoadMatrixf(&(light_view_matrix[0][0]));
 		vec3 pivot = cross(light_dir, vec3(0, 0, -1));
 		glRotatef(acos(light_dir * vec3(0, 0, -1)/module(light_dir)), pivot[0], pivot[1], pivot[2]);
-		glTranslatef(camera_position[0], camera_position[1], camera_position[2]);
+		glTranslatef(-camera_position[0], -camera_position[1], -camera_position[2]);
 		glGetFloatv(GL_MODELVIEW_MATRIX, buf);
 	glPopMatrix();
 	light_view_matrix = mat4(buf);
