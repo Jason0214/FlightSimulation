@@ -7,13 +7,12 @@
 using namespace std;
 
 static int comp(const void* a, const void* b) {
-	return (int)((*(InstancePtrWithDist**)a)->distance - (*(InstancePtrWithDist**)b)->distance);
+	return (int)((*(Instance**)a)->distance - (*(Instance**)b)->distance);
 }
 
 Scene::Scene():shadow_map(){
 	this->background = NULL;
 	this->plane = NULL;
-	this->buf_for_sort = NULL;
 	memset(this->object_grid_map, NULL, MAP_SIDE_NUM *MAP_SIDE_NUM * sizeof(Instance*));
 }
 
@@ -27,20 +26,11 @@ void Scene::AppendObject(vec3 & position, StaticModel* instance, vec3 & rotate, 
 }
 
 void Scene::Arrange(const vec3 & camera_front,const vec3 & camera_position){
-	if (!this->buf_for_sort) {
-		//init buf when using it at the first time
-		this->buf_for_sort = new InstancePtrWithDist*[this->object_list.size()];
-		for (unsigned int i = 0; i < this->object_list.size(); i++) {
-			this->buf_for_sort[i] = new InstancePtrWithDist;
-		}
-	}
 	for (unsigned int i = 0; i < this->object_list.size(); i++) {
 		float distance = normalize(camera_front)*(this->object_list[i]->position - camera_position);
-		this->buf_for_sort[i]->distance = distance;
-		this->buf_for_sort[i]->instance_ptr = this->object_list[i];
+		this->object_list[i]->distance = distance;
 	}
-
-	qsort(this->buf_for_sort, this->object_list.size(), sizeof(InstancePtrWithDist*), comp);
+	qsort(&(this->object_list[0]), this->object_list.size(), sizeof(Instance*), comp);
 }
 
 void Scene::GenerateProjectionMatrix(GLuint width, GLuint height) {
@@ -58,15 +48,15 @@ void Scene::GenerateProjectionMatrix(GLuint width, GLuint height) {
 void Scene::RenderAll(const LightSrc & sun, const vec3 & camera_position){
 // render shadow map
 	this->GenerateShadowMap(sun.direction, camera_position, this->window_width/this->window_height);
-// draw objects from far to near in order to fit with alpha value
 	int instance_index = (int)this->object_list.size()-1;
 	for (int i = FRUSTUM_NUM -1; i >=0; i--) {
 		glClear(GL_DEPTH_BUFFER_BIT);
+		// draw alpha objects from far to near in order to fit with alpha value
 		for (; instance_index >= 0; instance_index--) {
-			InstancePtrWithDist* ptr = this->buf_for_sort[instance_index];
+			Instance* ptr = this->object_list[instance_index];
 			if (ptr->distance < this->frustum_clip[i]) break;
-			ptr->instance_ptr->model->Render(ptr->distance < 40.0f ? 0 : 1, ptr->instance_ptr->model_matrix,
-								this->projection_matrix[i], sun, this->shadow_map);
+			ptr->model->Render(ptr->distance < 40.0f ? 0 : 1, ptr->model_matrix,
+									this->projection_matrix[i], sun, this->shadow_map);
 		}
 		this->background->Render(this->projection_matrix[i], sun, this->shadow_map);
 	}
@@ -75,10 +65,10 @@ void Scene::RenderAll(const LightSrc & sun, const vec3 & camera_position){
 
 void Scene::RenderFrame(GLuint frustum_index) {
 	for (unsigned int i = 0; i < this->object_list.size(); i++) {
-		InstancePtrWithDist* ptr = this->buf_for_sort[i];
+		Instance* ptr = this->object_list[i];
 		if (ptr->distance > this->frustum_clip[frustum_index+1]) break;
 		if (ptr->distance > this->frustum_clip[frustum_index]) {
-			ptr->instance_ptr->model->RenderFrame(ptr->distance < 40.0f ? 0 : 1, ptr->instance_ptr->model_matrix,
+			ptr->model->RenderFrame(ptr->distance < 40.0f ? 0 : 1, ptr->model_matrix,
 				this->projection_matrix[frustum_index], this->shadow_map.shader);
 		}
 	}
@@ -137,12 +127,12 @@ void Scene::CheckCollision() const{
 	for (int i = x - 2; i < x + 2; i++) {
 		for (int j = z - 2; j < z + 2; j++) {
 			const vector<Instance*> & model_list = this->object_grid_map[i][j];
-			for (unsigned int k = 0; k < model_list.size(); k++) {
-				int k_num = model_list[k]->model->wrapper_num;
+			for (unsigned int ii = 0; ii < model_list.size(); ii++) {
+				int k_num = model_list[ii]->model->wrapper_num;
 				int v_num = this->plane->wrapper_num;
 				for (int k = 0; k < k_num; k++) {
 					for (int v = 0; v < v_num; v++) {
-						if (OBBdetection(plane_wrappers[v], model_list[k]->model->wrappers[k].Translate(mat4(model_list[k]->model_matrix)))) {
+						if (OBBdetection(plane_wrappers[v], model_list[ii]->model->wrappers[k].Translate(mat4(model_list[ii]->model_matrix)))) {
 							throw Collision();
 						}
 					}
@@ -194,10 +184,6 @@ bool Scene::OBBdetection(Wrapper & a, Wrapper & b) const{
 }
 
 void Scene::FreeAll(){
-	for (unsigned int i = 0; i < this->object_list.size(); i++) {
-		delete this->buf_for_sort[i];
-	}
-	delete[] this->buf_for_sort;
 	for (unsigned int i = 0; i < this->object_list.size(); i++) {
 		delete this->object_list[i];
 	}

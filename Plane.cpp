@@ -190,11 +190,13 @@ void PlaneModel::Render(const LightSrc & light, const DepthBuffer & shadow_map, 
 	GLfloat matrix_buf[16];
 	this->shader.Use();
 	shadow_map.BufferReadConfig(this->shader);
+	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), light.direction[0], light.direction[1], light.direction[2]);
+	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), light.color[0], light.color[1], light.color[2]);
 	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef(this->position[0], this->position[1], this->position[2]);
-	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+		glTranslatef(this->position[0], this->position[1], this->position[2]);
+		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
 	glPopMatrix();
 	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);;
 	glPushMatrix();

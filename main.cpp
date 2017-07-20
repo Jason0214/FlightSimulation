@@ -115,13 +115,13 @@ static void init() {
 			tree[i]->shader = tree_shader;
 			tree[i]->Load("./assets/tree/tree_low.obj", 1);
 		}
-		tree[0]->Load("./assets/tree/OC26_2.obj");
+		tree[0]->Load("./assets/tree/OC26_2.obj", 0);
 		tree[0]->LoadWrapper(tree_small_wrapper_path, 2);
-		tree[1]->Load("./assets/tree/OC26_3.obj");
+		tree[1]->Load("./assets/tree/OC26_3.obj", 0);
 		tree[1]->LoadWrapper(tree_small_wrapper_path, 2);
-		tree[2]->Load("./assets/tree/OC26_4.obj");
+		tree[2]->Load("./assets/tree/OC26_5.obj", 0);
 		tree[2]->LoadWrapper(tree_small_wrapper_path, 2);
-		tree[3]->Load("./assets/tree/OC26_8.obj");
+		tree[3]->Load("./assets/tree/OC26_8.obj", 0);
 		tree[3]->LoadWrapper(tree_big_wrapper_path, 2);
 
 		Shader mountain_shader;

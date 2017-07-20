@@ -48,7 +48,7 @@ Wrapper Wrapper::Translate(mat4 matrix) {
 		ret.Vertices.push_back(vec3(matrix * vec4((*ptr)[0], (*ptr)[1], (*ptr)[2], 1.0f)));
 	}
 	for (vector<vec3>::const_iterator ptr = this->FaceNormal.begin(); ptr != this->FaceNormal.end(); ptr++) {
-		ret.FaceNormal.push_back(vec3(matrix * vec4((*ptr)[0], (*ptr)[1], (*ptr)[2], 1.0f)));
+		ret.FaceNormal.push_back(vec3(matrix * vec4((*ptr)[0], (*ptr)[1], (*ptr)[2], 0.0f)));
 	}
 	return ret;
 }

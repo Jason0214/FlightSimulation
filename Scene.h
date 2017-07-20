@@ -34,10 +34,6 @@ public:
 	GLfloat model_matrix[16];
 	vec3 position;
 	StaticModel* model;
-};
-
-struct InstancePtrWithDist {
-	Instance* instance_ptr;
 	GLfloat distance;
 };
 
@@ -73,8 +69,6 @@ private:
 	std::vector<Instance*> object_list;
 	std::vector<Instance*> object_grid_map[MAP_SIDE_NUM][MAP_SIDE_NUM];
 	GLfloat projection_matrix[FRUSTUM_NUM][16];
-
-	InstancePtrWithDist** buf_for_sort;
 
 	const GLfloat frustum_clip[FRUSTUM_NUM + 1] = { 1.0f, 500.0f, 2500.0f};
 };
