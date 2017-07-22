@@ -1,15 +1,5 @@
 #include "myMath.h"
 #include "Exception.h"
-const static float RAD_PER_DEGREE = 3.1415926f/180;
-float CosAngle(float theta) {
-	return cos((theta)*RAD_PER_DEGREE);
-}
-float SinAngle(float theta) {
-	return sin((theta)*RAD_PER_DEGREE);
-}
-float TanAngle(float theta) {
-	return tan((theta)*RAD_PER_DEGREE);
-}
 
 float Power(float x, int exp){
 	float res = 1.0f;
@@ -95,7 +85,7 @@ vec2 vec2::operator+ (const vec2 & v) const {
 	return ret;
 }
 
-vec2 & vec2::operator+=(const vec2 & v) {
+const vec2 & vec2::operator+=(const vec2 & v) {
 	_add(this->data(), this->data(), v.data(), 2);
 	return *this;
 }
@@ -108,7 +98,7 @@ vec2 vec2::operator- (const vec2 & v) const {
 float vec2::operator* (const vec2 & v) const {
 	return vec_dot(this->data(), v.data(), 2);
 }
-vec2 & vec2::operator= (vec2 & v) {
+const vec2 & vec2::operator= (vec2 & v) {
 	if (this != &v) {
 		_assign(this->data(), v.data(), 2);
 	}
@@ -126,7 +116,7 @@ vec3 vec3::operator+ (const vec3 & v) const {
 	return ret;
 }
 
-vec3 & vec3::operator+=(const vec3 & v){
+const vec3 & vec3::operator+=(const vec3 & v){
 	_add(this->data(), this->data(), v.data(), 3);
 	return *this;
 }
@@ -139,7 +129,7 @@ vec3 vec3::operator- (const vec3 & v) const {
 float vec3::operator* (const vec3 & v) const {
 	return vec_dot(this->data(), v.data(), 3);
 }
-vec3 & vec3::operator= (const vec3 & v) {
+const vec3 & vec3::operator= (const vec3 & v) {
 	if (this != &v) {
 		_assign(this->data(), v.data(), 3);
 	}
@@ -156,7 +146,7 @@ vec4 vec4::operator+ (const vec4 & v) const {
 	_add(ret.data(), this->data(), v.data(), 4);
 	return ret;
 }
-vec4 & vec4::operator+=(const vec4 & v) {
+const vec4 & vec4::operator+=(const vec4 & v) {
 	_add(this->data(), this->data(), v.data(), 4);
 	return *this;
 }
@@ -168,7 +158,7 @@ vec4 vec4::operator- (const vec4 & v) const {
 float vec4::operator* (const vec4 & v) const {
 	return vec_dot(this->data(), v.data(), 4);
 }
-vec4 & vec4::operator= (const vec4 & v) {
+const vec4 & vec4::operator= (const vec4 & v) {
 	if (this != &v) {
 		_assign(this->data(), v.data(), 4);
 	}
@@ -192,16 +182,19 @@ vec2 vec2::operator/ (float k) const {
 	return ret;
 }
 
-void vec4::operator/= (float k){
+const vec4 & vec4::operator/= (float k){
 	vec_div(this->data(), this->data(), k, 4);
+	return *this;
 }
 
-void vec3::operator/= (float k) {
+const vec3 & vec3::operator/= (float k) {
 	vec_div(this->data(), this->data(), k, 3);
+	return *this;
 }
 
-void vec2::operator/= (float k) {
+const vec2 & vec2::operator/= (float k) {
 	vec_div(this->data(), this->data(), k, 2);
+	return *this;
 }
 
 
@@ -226,7 +219,7 @@ vec4 normalize(const vec4 & v){
 
 vec3 cross(const vec3 & v1, const vec3 & v2){
 	vec3 ret;
-	ret[0] = v1[1] * v2[2] - v1[2] * v1[1];
+	ret[0] = v1[1] * v2[2] - v1[2] * v2[1];
 	ret[1] = v1[2] * v2[0] - v1[0] * v2[2];
 	ret[2] = v1[0] * v2[1] - v1[1] * v2[0];
 	return ret;

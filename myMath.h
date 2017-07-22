@@ -3,10 +3,29 @@
 #include <cmath>
 #include <cstring>
 
-float CosAngle(float );
-float SinAngle(float );
-float TanAngle(float );
+const static float RAD_PER_DEGREE = 3.1415926f / 180;
 
+inline float CosAngle(float theta) {
+	return cos((theta)*RAD_PER_DEGREE);
+}
+inline float SinAngle(float theta) {
+	return sin((theta)*RAD_PER_DEGREE);
+}
+inline float TanAngle(float theta) {
+	return tan((theta)*RAD_PER_DEGREE);
+}
+
+inline float ArcTanAngle(float v) {
+	return atan(v) / RAD_PER_DEGREE;
+}
+
+inline float ArcCosAngle(float v) {
+	return acos(v) / RAD_PER_DEGREE;
+}
+
+inline float ArcSinAngle(float v) {
+	return asin(v) / RAD_PER_DEGREE;
+}
 float Power(float x, int exp);
 
 // return float (-1,1)
@@ -40,13 +59,13 @@ public:
 	float operator[] (int index) const { return this->value[index]; }
 	vec4 operator* (float k) const;
 	vec4 operator/ (float k) const;
-	void operator/= (float k);
+	const vec4 & operator/= (float k);
 	vec4 operator+ (const vec4 & v) const;
-	vec4 & operator+=(const vec4 & v);
+	const vec4 & operator+=(const vec4 & v);
 	vec4 operator- (const vec4 & v) const;
 	vec4 operator-() const{return vec4(0.0f,0.0f,0.0f,0.0f) - *this;};	
 	float operator* (const vec4 & v) const;
-	vec4 & operator= (const vec4 & v);
+	const vec4 & operator= (const vec4 & v);
 private:
 	float value[4];
 };
@@ -86,13 +105,13 @@ public:
 	float operator[] (int index) const { return this->value[index]; }
 	vec3 operator* (float k) const;
 	vec3 operator/ (float k) const;
-	void operator/= (float k);
+	const vec3 & operator/= (float k);
 	vec3 operator+ (const vec3 & v) const;
-	vec3 & operator+=(const vec3 & v);
+	const vec3 & operator+=(const vec3 & v);
 	vec3 operator- (const vec3 & v) const;
 	vec3 operator-() const{return vec3(0.0f,0.0f,0.0f) - *this;}
 	float operator* (const vec3 & v) const;
-	vec3 & operator= (const vec3 & v);
+	const vec3 & operator= (const vec3 & v);
 private:
 	float value[3];
 };
@@ -123,13 +142,13 @@ public:
 	float operator[] (int index) const { return this->value[index]; }
 	vec2 operator* (float k) const;
 	vec2 operator/ (float k) const;
-	void operator/= (float k);
+	const vec2 & operator/= (float k);
 	vec2 operator+ (const vec2 & v) const;
-	vec2 & operator+=(const vec2 & v);
+	const vec2 & operator+=(const vec2 & v);
 	vec2 operator- (const vec2 & v) const;
 	vec2 operator-() const{return vec2(0.0f,0.0f) - *this;};
 	float operator* (const vec2 & v) const;
-	vec2 & operator= (vec2 & v);
+	const vec2 & operator= (vec2 & v);
 private:
 	float value[2];
 };
