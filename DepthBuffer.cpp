@@ -3,8 +3,6 @@
 #include "Scene.h"
 #include <iostream>
 
-using namespace std;
-
 DepthBuffer::~DepthBuffer(){
 	for (int i = 0; i < CASCADE_NUM; i++)
 		glDeleteTextures(1, &(this->depth_textureID[i]));
@@ -16,7 +14,7 @@ void DepthBuffer::BufferWriteConfig(const vec3 & light_dir, GLfloat aspect_ratio
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 		glLoadIdentity();
-		gluLookAt(0.0f, 0.0f, 0.0f, -light_dir[0], -light_dir[1], -light_dir[2],  0.0f, 1.0f, 0.0f);
+		gluLookAt(0.0f, 0.0f, 0.0f, -light_dir[0], -light_dir[1], -light_dir[2], 0.0f, 1.0f, 0.0f);
 		glGetFloatv(GL_MODELVIEW_MATRIX, this->light_space_view);
 	glPopMatrix();
 	this->GenerateOrtho(light_dir, aspect_ratio);
@@ -83,19 +81,18 @@ void DepthBuffer::GenerateOrtho(const vec3 & light_dir, GLfloat aspect_ratio) {
 		};
 
 		for(int j = 1; j < 8; j++){
-			if(ortho_params[0] > frustum_world_position[j].x()) ortho_params[0] = frustum_world_position[j].x();
-			if(ortho_params[1] < frustum_world_position[j].x()) ortho_params[1] = frustum_world_position[j].x();
-			if(ortho_params[2] > frustum_world_position[j].y()) ortho_params[2] = frustum_world_position[j].y();
-			if(ortho_params[3] < frustum_world_position[j].y()) ortho_params[3] = frustum_world_position[j].y();
-			if(ortho_params[4] > frustum_world_position[j].z()) ortho_params[4] = frustum_world_position[j].z();
-			if(ortho_params[5] < frustum_world_position[j].z()) ortho_params[5] = frustum_world_position[j].z();
+			if(frustum_world_position[j].x() < ortho_params[0]) ortho_params[0] = frustum_world_position[j].x();
+			if(frustum_world_position[j].x() > ortho_params[1]) ortho_params[1] = frustum_world_position[j].x();
+			if(frustum_world_position[j].y() < ortho_params[2]) ortho_params[2] = frustum_world_position[j].y();
+			if(frustum_world_position[j].y() > ortho_params[3]) ortho_params[3] = frustum_world_position[j].y();
+			if(frustum_world_position[j].z() < ortho_params[4]) ortho_params[4] = frustum_world_position[j].z();
+			if(frustum_world_position[j].z() > ortho_params[5]) ortho_params[5] = frustum_world_position[j].z();
 		}
-		glViewport(0, 0, this->map_width, this->map_height);
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(ortho_params[0], ortho_params[1], ortho_params[2], ortho_params[3], ortho_params[4], ortho_params[5]);
-		glGetFloatv(GL_PROJECTION_MATRIX, this->light_space_projection[i]);
+			glLoadIdentity();
+			glOrtho(ortho_params[0], ortho_params[1], ortho_params[2], ortho_params[3], ortho_params[4], ortho_params[5]);
+			glGetFloatv(GL_PROJECTION_MATRIX, this->light_space_projection[i]);
 		glPopMatrix();
 	}
 }
@@ -117,13 +114,13 @@ void DepthBuffer::init(std::string vs_path, std::string fs_path){
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->depth_textureID[i], 0);
 		glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) cout << "not done.";
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 }
 
 #ifdef DEPTH_BUFFER_TEST
 void DepthBuffer::test_init() {
+	this->test_shader.LoadShader("./Shaders/test_shader.vs", "./Shaders/test_shader.fs");
 	GLfloat vertices[] = {
 		-1.0f,  1.0f,  0.0f, 1.0f,
 		-1.0f, -1.0f,  0.0f, 0.0f,

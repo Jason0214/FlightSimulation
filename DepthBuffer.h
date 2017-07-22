@@ -6,7 +6,7 @@
 #include "Shader.h"
 #include <string>
 
-#define DEPTH_BUFFER_TEST
+//#define DEPTH_BUFFER_TEST
 
 #define MAX_CASCADE 3 // must keep consistent with cascade number in shader
 

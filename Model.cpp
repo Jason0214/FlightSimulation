@@ -127,12 +127,13 @@ void StaticModel::Render(unsigned int level_index,const GLfloat model_mat[], con
 }
 
 void StaticModel::RenderFrame(unsigned int level_index, const GLfloat model_mat[], const GLfloat view_mat[],
-					const GLfloat projection_mat[], const Shader & frame_shader) const {
-	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "model"), 1, GL_FALSE, model_mat);
-	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "view"), 1, GL_FALSE, view_mat);
-	glUniformMatrix4fv(glGetUniformLocation(frame_shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
+					const GLfloat projection_mat[], const Shader & shadow_shader) const {
+	shadow_shader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(shadow_shader.ProgramID, "model"), 1, GL_FALSE, model_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shadow_shader.ProgramID, "view"), 1, GL_FALSE, view_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shadow_shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
 	MeshData & current_mesh_set = this->data[level_index];
 	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
-		current_mesh_set.meshes[i].render(this->shader.ProgramID);
+		current_mesh_set.meshes[i].render_frame(shadow_shader.ProgramID);
 	}
 }
