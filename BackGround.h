@@ -12,8 +12,11 @@ public:
 		this->StaticModel::Render(level_index, this->model_mat, projection_matrix, light, depth_buffer);
 	}
 	// inheirts from class::StaticModel
-	void RenderFrame(const GLfloat projection_matrix[] ,const Shader & frame_shader, unsigned int level_index = 0)const{
-		this->StaticModel::RenderFrame(level_index, this->model_mat, projection_matrix, frame_shader);
+	void RenderFrame(const GLfloat view_matrix[], 
+					const GLfloat projection_matrix[],
+					const Shader & frame_shader, 
+					unsigned int level_index = 0)const{
+		this->StaticModel::RenderFrame(level_index, this->model_mat, view_matrix, projection_matrix, frame_shader);
 	}
 
 

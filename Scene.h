@@ -49,9 +49,9 @@ public:
 					StaticModel* instance, 
 					vec3 & rotate = vec3(0.0f,0.0f,0.0f), 
 					float angle = 0.0f);
-	void Arrange(const vec3 & camera_front,const vec3 & camera_position);
-
-	void RenderAll(const LightSrc & sun, const vec3 & camera_position);
+	void RenderAll(const LightSrc & sun, 
+					const vec3 & camera_pos, 
+					const vec3 & camera_front);
 	void GenerateProjectionMatrix(GLuint width, GLuint height);
 	void CheckCollision() const;
 	bool OBBdetection(Wrapper & a, Wrapper & b)const;
@@ -63,8 +63,8 @@ public:
 	GLint window_width;
 	GLint window_height;
 private:
-	void GenerateShadowMap(const vec3 & light_direction, const vec3 & camera_position, GLfloat aspect_ratio);
-	void RenderFrame(GLuint frustum_index);
+	void Arrange(const vec3 & camera_front, const vec3 & camera_position);
+	void GenerateShadowMap(const vec3 & light_direction, GLfloat aspect_ratio);
 
 	std::vector<Instance*> object_list;
 	std::vector<Instance*> object_grid_map[MAP_SIDE_NUM][MAP_SIDE_NUM];

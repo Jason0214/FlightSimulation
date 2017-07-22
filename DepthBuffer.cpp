@@ -12,14 +12,14 @@ DepthBuffer::~DepthBuffer(){
 		glDeleteFramebuffers(1, &(this->FBO[i]));
 }
 
-void DepthBuffer::BufferWriteConfig(const vec3 & light_dir, const vec3 & camera_position, GLfloat aspect_ratio) {
+void DepthBuffer::BufferWriteConfig(const vec3 & light_dir, GLfloat aspect_ratio) {
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glLoadIdentity();
-	gluLookAt(0.0f, 0.0f, 0.0f, -light_dir[0], -light_dir[1], -light_dir[2],  0.0f, 1.0f, 0.0f);
-	glGetFloatv(GL_MODELVIEW_MATRIX, this->light_space_view);
+		glLoadIdentity();
+		gluLookAt(0.0f, 0.0f, 0.0f, -light_dir[0], -light_dir[1], -light_dir[2],  0.0f, 1.0f, 0.0f);
+		glGetFloatv(GL_MODELVIEW_MATRIX, this->light_space_view);
 	glPopMatrix();
-	this->GenerateOrtho(light_dir, camera_position, aspect_ratio);
+	this->GenerateOrtho(light_dir, aspect_ratio);
 }
 
 void DepthBuffer::BufferReadConfig(const Shader & shader) const{
@@ -29,25 +29,25 @@ void DepthBuffer::BufferReadConfig(const Shader & shader) const{
 	glActiveTexture(GL_TEXTURE4);
 	glActiveTexture(GL_TEXTURE5);
 	glActiveTexture(GL_TEXTURE6);
-	glUniform1iv(glGetUniformLocation(shader.ProgramID, "shadow_map"), CASCADE_NUM, this->texture_index);
+	for (int i = 0; i < CASCADE_NUM; i++) {
+		glUniform1i(glGetUniformLocation(shader.ProgramID, "shadow_map"), 4 + i);
+	}
 }
 
-void DepthBuffer::GenerateOrtho(const vec3 & light_dir, const vec3 & camera_position, GLfloat aspect_ratio) {
+void DepthBuffer::GenerateOrtho(const vec3 & light_dir, GLfloat aspect_ratio) {
 	GLfloat buf[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, buf);
-	mat4 light_view_matrix(buf);
 	// get the inverse of current view matrix
-	light_view_matrix = inverse(light_view_matrix);
 	glMatrixMode(GL_MODELVIEW);
+	glGetFloatv(GL_MODELVIEW_MATRIX, buf);
+	mat4 inverse_view_matrix = inverse(mat4(buf));
 	glPushMatrix();
-		// translate the light vector to z pivot
-		glLoadMatrixf(&(light_view_matrix[0][0]));
-		vec3 pivot = cross(light_dir, vec3(0, 0, -1));
-		glRotatef(acos(light_dir * vec3(0, 0, -1)/module(light_dir)), pivot[0], pivot[1], pivot[2]);
-		glTranslatef(-camera_position[0], -camera_position[1], -camera_position[2]);
+		// convert z axit to the light direction
+		glLoadIdentity();
+		vec3 pivot = cross(vec3(0, 0, -1) ,-light_dir);
+		glRotatef(ArcCosAngle(-light_dir * vec3(0, 0, -1)), pivot[0], pivot[1], pivot[2]);
 		glGetFloatv(GL_MODELVIEW_MATRIX, buf);
 	glPopMatrix();
-	light_view_matrix = mat4(buf);
+	mat4 light_view_convert_matrix(buf);
 
 	vec4 frustum_world_position[8];
 	for(int i = 0; i < CASCADE_NUM; i++){
@@ -57,6 +57,7 @@ void DepthBuffer::GenerateOrtho(const vec3 & light_dir, const vec3 & camera_posi
 		GLfloat half_near_width = aspect_ratio * half_near_height;
 		GLfloat half_far_height = TanAngle(45.0f/2) * this->z_clip[i+1];
 		GLfloat half_far_width = aspect_ratio * half_far_height;
+		// init with frustum_view_position
 		frustum_world_position[0] = vec4(-half_near_width, half_near_height, -this->z_clip[i], 1);
 		frustum_world_position[1] = vec4(half_near_width, half_near_height, -this->z_clip[i], 1);
 		frustum_world_position[2] = vec4(half_near_width, -half_near_height, -this->z_clip[i], 1);
@@ -66,16 +67,16 @@ void DepthBuffer::GenerateOrtho(const vec3 & light_dir, const vec3 & camera_posi
 		frustum_world_position[6] = vec4(half_far_width, -half_far_height, -this->z_clip[i+1], 1);
 		frustum_world_position[7] = vec4(-half_far_width, -half_far_height, -this->z_clip[i+1], 1);
 
-		// translate frustum postion to light perspective
+		// convert frustum postion to light perspective 
 		for(int j = 0; j < 8; j++){
-			frustum_world_position[j] = light_view_matrix * frustum_world_position[j];
+			frustum_world_position[j] = light_view_convert_matrix * inverse_view_matrix * frustum_world_position[j];
 			frustum_world_position[j] /= frustum_world_position[j].w();
 		}
 
 		GLfloat ortho_params[6] = {
 			frustum_world_position[0].x(),
-			frustum_world_position[0].y(),
 			frustum_world_position[0].x(),
+			frustum_world_position[0].y(),
 			frustum_world_position[0].y(),
 			frustum_world_position[0].z(),
 			frustum_world_position[0].z(),
@@ -83,9 +84,9 @@ void DepthBuffer::GenerateOrtho(const vec3 & light_dir, const vec3 & camera_posi
 
 		for(int j = 1; j < 8; j++){
 			if(ortho_params[0] > frustum_world_position[j].x()) ortho_params[0] = frustum_world_position[j].x();
-			if(ortho_params[1] < frustum_world_position[j].y()) ortho_params[1] = frustum_world_position[j].y();
-			if(ortho_params[2] < frustum_world_position[j].x()) ortho_params[2] = frustum_world_position[j].x();
-			if(ortho_params[3] > frustum_world_position[j].y()) ortho_params[3] = frustum_world_position[j].y();
+			if(ortho_params[1] < frustum_world_position[j].x()) ortho_params[1] = frustum_world_position[j].x();
+			if(ortho_params[2] > frustum_world_position[j].y()) ortho_params[2] = frustum_world_position[j].y();
+			if(ortho_params[3] < frustum_world_position[j].y()) ortho_params[3] = frustum_world_position[j].y();
 			if(ortho_params[4] > frustum_world_position[j].z()) ortho_params[4] = frustum_world_position[j].z();
 			if(ortho_params[5] < frustum_world_position[j].z()) ortho_params[5] = frustum_world_position[j].z();
 		}
@@ -116,7 +117,7 @@ void DepthBuffer::init(std::string vs_path, std::string fs_path){
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, this->depth_textureID[i], 0);
 		glDrawBuffer(GL_NONE);
 		glReadBuffer(GL_NONE);
-		//if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) cout << "not done.";
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) cout << "not done.";
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 }
@@ -146,12 +147,15 @@ void DepthBuffer::test_init() {
 }
 
 
-void DepthBuffer::ShowTexture()const {
+void DepthBuffer::ShowTexture(int texture_index) {
+	if (!is_inited) {
+		this->test_init();
+	}
 	glDisable(GL_DEPTH_TEST);
 	this->test_shader.Use();
 	glBindVertexArray(this->test_VAO);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, this->depth_textureID[0]);
+		glBindTexture(GL_TEXTURE_2D, this->depth_textureID[texture_index]);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindVertexArray(0);
 	glEnable(GL_DEPTH_TEST);

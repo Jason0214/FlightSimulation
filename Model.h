@@ -84,6 +84,7 @@ public:
 
 	virtual void RenderFrame(unsigned int level_index, 
 							const GLfloat model_mat[], 
+							const GLfloat view_mat[],
 							const GLfloat projection_mat[], 
 							const Shader & frame_shader) const;
 protected:

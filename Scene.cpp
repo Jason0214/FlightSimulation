@@ -45,43 +45,46 @@ void Scene::GenerateProjectionMatrix(GLuint width, GLuint height) {
 	glPopMatrix();
 }
 
-void Scene::RenderAll(const LightSrc & sun, const vec3 & camera_position){
+void Scene::RenderAll(const LightSrc & sun, const vec3 & camera_pos, const vec3 & camera_front){
 // render shadow map
-	this->GenerateShadowMap(sun.direction, camera_position, this->window_width/this->window_height);
-	int instance_index = (int)this->object_list.size()-1;
-	for (int i = FRUSTUM_NUM -1; i >=0; i--) {
-		glClear(GL_DEPTH_BUFFER_BIT);
-		// draw alpha objects from far to near in order to fit with alpha value
-		for (; instance_index >= 0; instance_index--) {
-			Instance* ptr = this->object_list[instance_index];
-			if (ptr->distance < this->frustum_clip[i]) break;
-			ptr->model->Render(ptr->distance < 40.0f ? 0 : 1, ptr->model_matrix,
-									this->projection_matrix[i], sun, this->shadow_map);
-		}
-		this->background->Render(this->projection_matrix[i], sun, this->shadow_map);
-	}
-	this->plane->Render(sun, this->shadow_map, this->projection_matrix[0]);
+	this->Arrange(camera_front, camera_pos);
+	this->GenerateShadowMap(sun.direction, this->window_width/this->window_height);
+	this->shadow_map.ShowTexture(0);
+	//int instance_index = (int)this->object_list.size()-1;
+	//for (int i = FRUSTUM_NUM -1; i >=0; i--) {
+	//	glClear(GL_DEPTH_BUFFER_BIT);
+	//	// draw alpha objects from far to near in order to fit with alpha value
+	//	for (; instance_index >= 0; instance_index--) {
+	//		Instance* ptr = this->object_list[instance_index];
+	//		if (ptr->distance < this->frustum_clip[i]) break;
+	//		ptr->model->Render(ptr->distance < 40.0f ? 0 : 1, ptr->model_matrix,
+	//								this->projection_matrix[i], sun, this->shadow_map);
+	//	}
+	//	this->background->Render(this->projection_matrix[i], sun, this->shadow_map);
+	//}
+	//this->plane->Render(sun, this->shadow_map, this->projection_matrix[0]);
 }
 
-void Scene::RenderFrame(GLuint frustum_index) {
-	for (unsigned int i = 0; i < this->object_list.size(); i++) {
-		Instance* ptr = this->object_list[i];
-		if (ptr->distance > this->frustum_clip[frustum_index+1]) break;
-		if (ptr->distance > this->frustum_clip[frustum_index]) {
-			ptr->model->RenderFrame(ptr->distance < 40.0f ? 0 : 1, ptr->model_matrix,
-				this->projection_matrix[frustum_index], this->shadow_map.shader);
-		}
-	}
-	this->background->RenderFrame(this->projection_matrix[frustum_index], this->shadow_map.shader);
-	this->plane->RenderFrame(this->projection_matrix[frustum_index], this->shadow_map.shader);
-}
-
-void Scene::GenerateShadowMap(const vec3 & light_direction, const vec3 & camera_position, GLfloat aspect_ratio){
-	this->shadow_map.BufferWriteConfig(light_direction, camera_position, aspect_ratio);
+void Scene::GenerateShadowMap(const vec3 & light_direction, GLfloat aspect_ratio){
+	glViewport(0, 0, this->shadow_map.map_width, this->shadow_map.map_height);
+	this->shadow_map.BufferWriteConfig(light_direction, aspect_ratio);
 	for (int i = 0; i < DepthBuffer::CASCADE_NUM; i++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, this->shadow_map.GetFrameBuffer(i));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		this->RenderFrame(0);
+		for (unsigned int i = 0; i < this->object_list.size(); i++) {
+			Instance* ptr = this->object_list[i];
+			if (ptr->distance > this->shadow_map.GetClip(i + 1)) break;
+			if (ptr->distance > this->shadow_map.GetClip(i)) {
+				ptr->model->RenderFrame(ptr->distance < 40.0f ? 0 : 1, ptr->model_matrix,
+					this->shadow_map.GetViewMatrix(),
+					this->shadow_map.GetProjectionMatrix(i), 
+					this->shadow_map.shader);
+			}
+			this->background->RenderFrame(this->shadow_map.GetViewMatrix(),
+				this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
+			this->plane->RenderFrame(this->shadow_map.GetViewMatrix(),
+				this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
+		}
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, this->window_width, this->window_height);

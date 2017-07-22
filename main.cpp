@@ -39,7 +39,7 @@ GLuint STATUS;
 Camera camera(923.0f, 50.0f, 1000.0f);
 SkyBox skybox;
 Scene scene;
-LightSrc sun(vec3(0.5f, 0.5f, 0.5f));
+LightSrc sun(vec3(0.0f, 1.0f, 0.0f));
 PlaneModel* plane;
 StaticModel* tree[4];
 BackGround* mountain;
@@ -166,28 +166,22 @@ static void init() {
 }
 
 static void Display() {
-	if (STATUS == CAMERA) {
-		scene.Arrange(camera.front, camera.position);
-	}
-	else{
-		scene.Arrange(plane->position - plane->View(), plane->View());
-	}
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 		if (STATUS == CAMERA) {
 			gluLookAt(camera.position.x(), camera.position.y(), camera.position.z(),
-				camera.position.x() + camera.front.x(), camera.position.y() + camera.front.y(), 
+				camera.position.x() + camera.front.x(), camera.position.y() + camera.front.y(),
 				camera.position.z() + camera.front.z(), camera.up.x(), camera.up.y(), camera.up.z());
-			skybox.Draw(camera.position.x(), camera.position.y(), camera.position.z());
-			scene.RenderAll(sun, camera.position);
+			//skybox.Draw(camera.position.x(), camera.position.y(), camera.position.z());
+			scene.RenderAll(sun, camera.position, camera.front);
 		}
 		else{
 			gluLookAt(plane->View().x(), plane->View().y(), plane->View().z(),
 				plane->position.x(), plane->position.y(), plane->position.z(),
 				0.0f, 1.0f, 0.0f);
-			skybox.Draw(plane->View().x(), plane->View().y(), plane->View().z());
-			scene.RenderAll(sun, plane->View());
+			//skybox.Draw(plane->View().x(), plane->View().y(), plane->View().z());
+			scene.RenderAll(sun, plane->View(), plane->position - plane->View());
 		}
 	glutSwapBuffers();
 }

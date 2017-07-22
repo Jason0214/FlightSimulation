@@ -6,8 +6,13 @@ class PlaneModel: public Model {
 public:
 	PlaneModel(vec3 origin_position);
 	~PlaneModel(){}
-	void Render(const LightSrc & light, const DepthBuffer & depth_buffer, const GLfloat []) const;
-	void RenderFrame(const GLfloat projection_matrix[], const Shader & frame_shader) const;
+	void Render(const LightSrc & light, 
+				const DepthBuffer & depth_buffer, 
+				const GLfloat []) const;
+	
+	void RenderFrame(const GLfloat view_matrix[], 
+					const GLfloat projection_matrix[], 
+					const Shader & frame_shader) const;
 
 	bool is_land;
 	bool is_crash;
@@ -45,7 +50,7 @@ public:
 
 	vec3 View() {
 		vec3 temp = this->position - normalize(vec3(this->front.x(),0.0f,this->front.z()))*12.0f;
-		return vec3(temp.x(), this->position.y()+5.0f, temp.z());
+		return vec3(temp.x(), this->position.y() + 5.0f, temp.z());
 	}
 private:
 	void Rotate(GLfloat angle, int pivot);
