@@ -50,7 +50,7 @@ public:
 
 	vec3 View() {
 		vec3 temp = this->position - normalize(vec3(this->front.x(),0.0f,this->front.z()))*12.0f;
-		return vec3(temp.x(), this->position.y() + 5.0f, temp.z());
+		return vec3(temp.x(), this->position.y()+5.0f, temp.z());
 	}
 private:
 	void Rotate(GLfloat angle, int pivot);

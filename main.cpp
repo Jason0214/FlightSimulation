@@ -39,7 +39,7 @@ GLuint STATUS;
 Camera camera(923.0f, 50.0f, 1000.0f);
 SkyBox skybox;
 Scene scene;
-LightSrc sun(vec3(0.0f, 1.0f, 0.0f));
+LightSrc sun(vec3(0.5f, 0.5f, 0.5f));
 PlaneModel* plane;
 StaticModel* tree[4];
 BackGround* mountain;

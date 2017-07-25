@@ -76,16 +76,16 @@ void Scene::GenerateShadowMap(const vec3 & light_direction, GLfloat aspect_ratio
 			if (ptr->distance > this->shadow_map.GetClip(i + 1)) break;
 			if (ptr->distance > this->shadow_map.GetClip(i)) {
 				ptr->model->RenderFrame(ptr->distance < 15.0f ? 0 : 1, 
-					ptr->model_matrix,
-					this->shadow_map.GetViewMatrix(),
-					this->shadow_map.GetProjectionMatrix(i), 
-					this->shadow_map.shader);
+										ptr->model_matrix,
+										this->shadow_map.GetViewMatrix(),
+										this->shadow_map.GetProjectionMatrix(i), 
+										this->shadow_map.shader);
 			}
-			this->background->RenderFrame(this->shadow_map.GetViewMatrix(),
-				this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
-			this->plane->RenderFrame(this->shadow_map.GetViewMatrix(),
-				this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
 		}
+		this->background->RenderFrame(this->shadow_map.GetViewMatrix(),
+			this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
+		this->plane->RenderFrame(this->shadow_map.GetViewMatrix(),
+			this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, this->window_width, this->window_height);

@@ -34,8 +34,8 @@ public:
 	}
 
 	Shader shader;
-	const GLuint map_width = 1024;
-	const GLuint map_height = 1024;
+	static const GLuint map_width = 1024;
+	static const GLuint map_height = 1024;
 	static const int CASCADE_NUM = 2;
 
 #ifdef DEPTH_BUFFER_TEST
@@ -47,14 +47,11 @@ public:
 	GLuint test_VBO;
 #endif
 private:
-	void GenerateOrtho(const vec3 & light_dir, 
-						GLfloat aspect_ratio);
-
 	GLfloat light_space_view[16];
 	GLfloat light_space_projection[CASCADE_NUM][16];
 
 	GLuint FBO[CASCADE_NUM];
 	GLuint depth_textureID[CASCADE_NUM];
 
-	GLfloat z_clip[MAX_CASCADE + 1] = { 1.0f, 20.0f, 500.0f};
+	GLfloat z_clip[MAX_CASCADE + 1] = { 1.0f, 20.0f, 500.0f, 500.0f};
 };

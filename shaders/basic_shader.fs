@@ -26,8 +26,8 @@ float CalculateShadow(vec4 LightSpacePosition){
         && 0.0f < depth_texture_coords.z &&  depth_texture_coords.z < 1.0f){
         float closest_depth = texture(shadow_map[light_space_level], depth_texture_coords.xy).r;
         float current_depth = depth_texture_coords.z;
-        float bias = max(0.05 * (1.0 - dot(Normal, LightDirection)), 0.005f); 
-        shadow_value = current_depth - bias > closest_depth ? 1.0f : 0.0f;    
+        float bias = max(0.05 * (1.0 - dot(Normal, LightDirection)), 0.005f);
+        shadow_value = current_depth - bias > closest_depth ? 1.0f : 0.0f; 
     }
     else{
         shadow_value = 0.0f;
