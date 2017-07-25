@@ -67,7 +67,7 @@ void Scene::RenderAll(const LightSrc & sun, const vec3 & camera_pos, const vec3 
 
 void Scene::GenerateShadowMap(const vec3 & light_direction, GLfloat aspect_ratio){
 	glViewport(0, 0, this->shadow_map.map_width, this->shadow_map.map_height);
-	this->shadow_map.BufferWriteConfig(light_direction, aspect_ratio);
+	this->shadow_map.BufferWriteConfig(aspect_ratio);
 	for (int i = 0; i < DepthBuffer::CASCADE_NUM; i++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, this->shadow_map.GetFrameBuffer(i));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -82,8 +82,8 @@ void Scene::GenerateShadowMap(const vec3 & light_direction, GLfloat aspect_ratio
 										this->shadow_map.shader);
 			}
 		}
-		this->background->RenderFrame(this->shadow_map.GetViewMatrix(),
-			this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
+		//this->background->RenderFrame(this->shadow_map.GetViewMatrix(),
+		//	this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
 		this->plane->RenderFrame(this->shadow_map.GetViewMatrix(),
 			this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
 	}

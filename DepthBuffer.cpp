@@ -1,9 +1,6 @@
 #include "DepthBuffer.h"
 #include "Exception.h"
 #include "Scene.h"
-#include <sstream>
-
-using namespace std;
 
 DepthBuffer::~DepthBuffer(){
 	for (int i = 0; i < CASCADE_NUM; i++)
@@ -12,19 +9,12 @@ DepthBuffer::~DepthBuffer(){
 		glDeleteFramebuffers(1, &(this->FBO[i]));
 }
 
-void DepthBuffer::BufferWriteConfig(const vec3 & light_dir, GLfloat aspect_ratio) {
+void DepthBuffer::BufferWriteConfig(GLfloat aspect_ratio) {
 	// get the inverse of current view matrix
 	GLfloat buf[16];
 	glMatrixMode(GL_MODELVIEW);
 	glGetFloatv(GL_MODELVIEW_MATRIX, buf);
 	mat4 view_to_world_matrix = inverse(mat4(buf));
-
-	glPushMatrix();
-		glLoadIdentity();
-		gluLookAt(0.0f, 0.0f, 0.0f, -light_dir[0], -light_dir[1], -light_dir[2], 0.0f, 1.0f, 0.0f);
-		glGetFloatv(GL_MODELVIEW_MATRIX, this->light_space_view);
-	glPopMatrix();
-
 	mat4 light_view_convert_matrix(this->light_space_view);
 
 	vec4 frustum_world_position[8];
@@ -77,20 +67,27 @@ void DepthBuffer::BufferWriteConfig(const vec3 & light_dir, GLfloat aspect_ratio
 }
 
 void DepthBuffer::BufferReadConfig(const Shader & shader) const {
-	glUniform1fv(glGetUniformLocation(shader.ProgramID, "shadow_clip"), CASCADE_NUM + 1, this->z_clip);
+	glUniform1fv(glGetUniformLocation(shader.ProgramID, "shadow_clip"), CASCADE_NUM, &(this->z_clip[1]));
 	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "light_space_view"), 1, GL_FALSE, this->light_space_view);
-	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "light_space_projection"), CASCADE_NUM, GL_FALSE, (const GLfloat*)this->light_space_projection);
-	for (int i = 0; i < CASCADE_NUM; i++) {
-		glActiveTexture(GL_TEXTURE4 + i);
-		glBindTexture(GL_TEXTURE_2D, this->depth_textureID[i]);
-		glUniform1i(glGetUniformLocation(shader.ProgramID, ("shadow_map[" + stringstream(i).str() + "]").c_str()), 4 + i);
-	}
-//	GLint texture_index[MAX_CASCADE] = { 4, 5, 6 };
-//	glUniform1iv(glGetUniformLocation(shader.ProgramID, "shadow_map"), CASCADE_NUM, (GLint*)texture_index);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "light_space_projection"), 
+											CASCADE_NUM, GL_FALSE, (const GLfloat*)this->light_space_projection);
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, this->depth_textureID[0]);
+	glUniform1i(glGetUniformLocation(shader.ProgramID, "shadow_map[0]"), 4);
+
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, this->depth_textureID[1]);
+	glUniform1i(glGetUniformLocation(shader.ProgramID, "shadow_map[1]"), 5);
+
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, this->depth_textureID[2]);
+	glUniform1i(glGetUniformLocation(shader.ProgramID, "shadow_map[2]"), 6);
 }
 
-void DepthBuffer::init(std::string vs_path, std::string fs_path){
-	this->shader.LoadShader(vs_path.c_str(), fs_path.c_str());
+void DepthBuffer::init(std::string vs_path, std::string fs_path, const vec3 & light_dir){
+	this->ShaderInit(vs_path, fs_path);
+	this->LightDirInit(light_dir);
 	for (int i = 0; i < CASCADE_NUM; i++) {
 		// gen texture ID
 		glGenTextures(1, &(this->depth_textureID[i]));

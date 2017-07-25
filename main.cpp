@@ -141,7 +141,7 @@ static void init() {
 										"./assets/wrapper/Ctrl_wheel.obj","./assets/wrapper/Ctrl_wing.obj"};
 		plane->Load("./assets/plane/Spowith.obj");
 		plane->LoadWrapper(plane_wrapper_path, 6);
-		plane->shader.LoadShader("./shaders/plane_shader.vs", "./shaders/plane_shader.fs");
+		plane->shader.LoadShader("./shaders/basic_shader.vs", "./shaders/basic_shader.fs");
 		
 		// assign the position of tree model
 		scene.AppendObject(vec3(929.0f, 0, 1018.0f), tree[0]);
@@ -155,7 +155,7 @@ static void init() {
 		scene.background = mountain;
 		scene.plane = plane;
 		// init depth frame
-		scene.shadow_map.init("./shaders/shadow_map_shader.vs", "./shaders/shadow_map_shader.fs");
+		scene.shadow_map.init("./shaders/shadow_map_shader.vs", "./shaders/shadow_map_shader.fs", sun.direction);
 	}
 	catch (const Exception & e) {
 		cout << e.Info();
