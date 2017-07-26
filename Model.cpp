@@ -87,7 +87,7 @@ void Model::LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, st
 		vector<Texture> specular_textures = this->LoadMeshMaterial(material, aiTextureType_SPECULAR, directory );
 		mesh.specular_texture.insert(mesh.specular_texture.end(), specular_textures.begin(), specular_textures.end());
 	}
-	mesh.deploy(this->Model::draw_type);
+	mesh.deploy(this->Model::render_type);
 }
 
 void Model::Load(string path, unsigned int level_index) {
@@ -107,33 +107,50 @@ void Model::Load(string path, unsigned int level_index) {
 	import.FreeScene();
 }
 
-void StaticModel::Render(unsigned int level_index,const GLfloat model_mat[], const GLfloat projection_mat[], 
-								const LightSrc & sun, const DepthBuffer & shadow_map) const{
+void StaticModel::Render(const GLfloat model_mat[], const GLfloat projection_mat[],
+						const LightSrc & sun, const Shader & shader) const {
 	GLfloat matrix_buf[16];
-	this->shader.Use();
+	shader.Use();
 	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
-	glUniformMatrix4fv(glGetUniformLocation(this->shader.ProgramID, "model"), 1, GL_FALSE, model_mat);
-	// pass in shadow texture	
-	shadow_map.BufferReadConfig(this->shader);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "model"), 1, GL_FALSE, model_mat);
 	// pass in light param
-	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
-	glUniform3f(glGetUniformLocation(this->shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);
-	MeshData & current_mesh_set = this->data[level_index];
+	glUniform3f(glGetUniformLocation(shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
+	glUniform3f(glGetUniformLocation(shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);
+	MeshData & current_mesh_set = this->data[this->LEVEL_NUM-1];
 	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
-		current_mesh_set.meshes[i].render(this->shader.ProgramID);
+		current_mesh_set.meshes[i].render(shader.ProgramID);
 	}
 }
 
-void StaticModel::RenderFrame(unsigned int level_index, const GLfloat model_mat[], const GLfloat view_mat[],
-					const GLfloat projection_mat[], const Shader & shadow_shader) const {
-	shadow_shader.Use();
-	glUniformMatrix4fv(glGetUniformLocation(shadow_shader.ProgramID, "model"), 1, GL_FALSE, model_mat);
-	glUniformMatrix4fv(glGetUniformLocation(shadow_shader.ProgramID, "view"), 1, GL_FALSE, view_mat);
-	glUniformMatrix4fv(glGetUniformLocation(shadow_shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
+void StaticModel::RenderDetailly(unsigned int level_index,const GLfloat model_mat[], const GLfloat projection_mat[], 
+								const LightSrc & sun, const DepthBuffer & shadow_map, const Shader & shader) const{
+	GLfloat matrix_buf[16];
+	shader.Use();
+	glGetFloatv(GL_MODELVIEW_MATRIX, matrix_buf);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "view"), 1, GL_FALSE, matrix_buf);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "model"), 1, GL_FALSE, model_mat);
+	// pass in shadow texture	
+	shadow_map.BufferReadConfig(shader);
+	// pass in light param
+	glUniform3f(glGetUniformLocation(shader.ProgramID, "light_direction"), sun.direction[0], sun.direction[1], sun.direction[2]);
+	glUniform3f(glGetUniformLocation(shader.ProgramID, "light_color"), sun.color[0], sun.color[1], sun.color[2]);
 	MeshData & current_mesh_set = this->data[level_index];
 	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
-		current_mesh_set.meshes[i].render_frame(shadow_shader.ProgramID);
+		current_mesh_set.meshes[i].render(shader.ProgramID);
+	}
+}
+
+void StaticModel::RenderNoTexture(unsigned int level_index, const GLfloat model_mat[], const GLfloat view_mat[],
+					const GLfloat projection_mat[], const Shader & shader) const {
+	shader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "model"), 1, GL_FALSE, model_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "view"), 1, GL_FALSE, view_mat);
+	glUniformMatrix4fv(glGetUniformLocation(shader.ProgramID, "projection"), 1, GL_FALSE, projection_mat);
+	MeshData & current_mesh_set = this->data[level_index];
+	for (unsigned int i = 0; i < current_mesh_set.mesh_num; i++) {
+		current_mesh_set.meshes[i].render_frame(shader.ProgramID);
 	}
 }

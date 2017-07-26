@@ -46,46 +46,49 @@ void Scene::GenerateProjectionMatrix(GLuint width, GLuint height) {
 }
 
 void Scene::RenderAll(const LightSrc & sun, const vec3 & camera_pos, const vec3 & camera_front){
-// render shadow map
-	this->Arrange(camera_front, camera_pos);
-	this->GenerateShadowMap(sun.direction, this->window_width/this->window_height);
-	//this->shadow_map.ShowTexture(0);
+	this->Arrange(camera_front, camera_pos); // sort object
+	this->GenerateShadowMap(); // get shadow texture
+	// real render begins
 	int instance_index = (int)this->object_list.size()-1;
-	for (int i = FRUSTUM_NUM -1; i >=0; i--) {
+	for (int i = FRUSTUM_NUM -1; i >= 0; i--) {
 		glClear(GL_DEPTH_BUFFER_BIT);
 		// draw alpha objects from far to near in order to fit with alpha value
 		for (; instance_index >= 0; instance_index--) {
 			Instance* ptr = this->object_list[instance_index];
 			if (ptr->distance < this->frustum_clip[i]) break;
-			ptr->model->Render(ptr->distance < 15.0f ? 0 : 1, ptr->model_matrix,
-									this->projection_matrix[i], sun, this->shadow_map);
+			ptr->model->RenderDetailly(ptr->distance > 15.0f ? 1 :0, 
+										ptr->model_matrix, 
+										this->projection_matrix[i], 
+										sun, 
+										this->shadow_map, 
+										this->detailed_shader_support_alpha);
 		}
-		this->background->Render(this->projection_matrix[i], sun, this->shadow_map);
+		this->background->RenderDetailly(1, this->projection_matrix[i], sun, this->shadow_map, this->detailed_shader);
 	}
-	this->plane->Render(sun, this->shadow_map, this->projection_matrix[0]);
+	this->plane->RenderDetailly(this->projection_matrix[0], sun, this->shadow_map, this->detailed_shader);
 }
 
-void Scene::GenerateShadowMap(const vec3 & light_direction, GLfloat aspect_ratio){
+void Scene::GenerateShadowMap(){
 	glViewport(0, 0, this->shadow_map.map_width, this->shadow_map.map_height);
-	this->shadow_map.BufferWriteConfig(aspect_ratio);
-	for (int i = 0; i < DepthBuffer::CASCADE_NUM; i++) {
+	this->shadow_map.BufferWriteConfig(this->window_width / this->window_height);
+	for (int i = 0; i < CASCADE_NUM; i++) {
 		glBindFramebuffer(GL_FRAMEBUFFER, this->shadow_map.GetFrameBuffer(i));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		for (unsigned int j = 0; j < this->object_list.size(); j++) {
 			Instance* ptr = this->object_list[j];
 			if (ptr->distance > this->shadow_map.GetClip(i + 1)) break;
 			if (ptr->distance > this->shadow_map.GetClip(i)) {
-				ptr->model->RenderFrame(ptr->distance < 15.0f ? 0 : 1, 
+				ptr->model->RenderNoTexture(ptr->distance < 15.0f ? 0 : 1, 
 										ptr->model_matrix,
 										this->shadow_map.GetViewMatrix(),
 										this->shadow_map.GetProjectionMatrix(i), 
-										this->shadow_map.shader);
+										this->shadow_map_shader);
 			}
 		}
-		//this->background->RenderFrame(this->shadow_map.GetViewMatrix(),
-		//	this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
-		this->plane->RenderFrame(this->shadow_map.GetViewMatrix(),
-			this->shadow_map.GetProjectionMatrix(i), this->shadow_map.shader);
+		//this->background->RenderNoTexture(0, this->shadow_map.GetViewMatrix(),
+		//	this->shadow_map.GetProjectionMatrix(i), this->shadow_map_shader);
+		this->plane->RenderNoTexture(this->shadow_map.GetViewMatrix(),
+			this->shadow_map.GetProjectionMatrix(i), this->shadow_map_shader);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, this->window_width, this->window_height);

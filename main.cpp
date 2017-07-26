@@ -33,7 +33,7 @@ using namespace std;
 #define STOP 0
 
 #define COLLISION_FREQUENCY 300
-#define RENDER_FREQUENCY 20
+#define RENDER_FREQUENCY 15
 GLuint STATUS;
 
 Camera camera(923.0f, 50.0f, 1000.0f);
@@ -106,13 +106,10 @@ static void init() {
 		skybox.shader.LoadShader("./shaders/skybox_shader.vs", "./shaders/skybox_shader.fs");
 	
 		// init tree model
-		Shader tree_shader;
 		string tree_small_wrapper_path[2] = { "./assets/wrapper/Ctrl_tree_small_up.obj","./assets/wrapper/Ctrl_tree_down.obj"};
 		string tree_big_wrapper_path[2] = { "./assets/wrapper/Ctrl_tree_big_up.obj","./assets/wrapper/Ctrl_tree_down.obj" };
-		tree_shader.LoadShader("./shaders/basic_shader.vs", "./shaders/basic_shader_support_alpha.fs");
 		for (unsigned int i = 0; i < 4; i++) {
 			tree[i] = new StaticModel();
-			tree[i]->shader = tree_shader;
 			tree[i]->Load("./assets/tree/tree_low.obj", 1);
 		}
 		tree[0]->Load("./assets/tree/OC26_2.obj", 0);
@@ -125,10 +122,9 @@ static void init() {
 		tree[3]->LoadWrapper(tree_big_wrapper_path, 2);
 
 		Shader mountain_shader;
-		mountain_shader.LoadShader("./shaders/basic_shader.vs", "./shaders/basic_shader.fs");
 		mountain = new BackGround();
-		mountain->Load("./assets/terrain/mountains_4.obj");
-		mountain->shader = mountain_shader;
+//		mountain->Load("./assets/terrain/mountains_4.obj", 0);
+		mountain->Load("./assets/terrain/mountains_4.obj", 1);
 		mountain->LoadHeightData("./assets/terrain/mountain.hmp");
 		mountain->airport[0][0] = 465;
 		mountain->airport[0][1] = 485;
@@ -139,9 +135,8 @@ static void init() {
 		string plane_wrapper_path[6] = { "./assets/wrapper/Ctrl_body.obj","./assets/wrapper/Ctrl_propeller.obj",
 										"./assets/wrapper/Ctrl_tail.obj","./assets/wrapper/Ctrl_tail2.obj",
 										"./assets/wrapper/Ctrl_wheel.obj","./assets/wrapper/Ctrl_wing.obj"};
-		plane->Load("./assets/plane/Spowith.obj");
+		plane->Load("./assets/plane/Spowith.obj", 0);
 		plane->LoadWrapper(plane_wrapper_path, 6);
-		plane->shader.LoadShader("./shaders/basic_shader.vs", "./shaders/basic_shader.fs");
 		
 		// assign the position of tree model
 		scene.AppendObject(vec3(929.0f, 0, 1018.0f), tree[0]);
@@ -154,8 +149,14 @@ static void init() {
 		scene.AppendObject(vec3(1200.0f, 5.0f, 1000.0f), tree[2]);
 		scene.background = mountain;
 		scene.plane = plane;
-		// init depth frame
-		scene.shadow_map.init("./shaders/shadow_map_shader.vs", "./shaders/shadow_map_shader.fs", sun.direction);
+		// init shader 
+		scene.shadow_map_shader.LoadShader("./shaders/shadow_map_shader.vs", "./shaders/shadow_map_shader.fs");
+		scene.basic_shader.LoadShader("./shaders/basic_shader.vs", "./shaders/basic_shader.fs");
+		scene.basic_shader_support_alpha.LoadShader("./shaders/basic_shader.vs", "./shaders/basic_shader_support_alpha.fs");
+		scene.detailed_shader.LoadShader("./shaders/detailed_shader.vs", "./shaders/detailed_shader.fs");
+		scene.detailed_shader_support_alpha.LoadShader("./shaders/detailed_shader.vs", "./shaders/detailed_shader_support_alpha.fs");
+		// shadow_map
+		scene.shadow_map.init(sun.direction);
 	}
 	catch (const Exception & e) {
 		cout << e.Info();

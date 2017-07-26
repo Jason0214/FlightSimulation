@@ -28,15 +28,15 @@ typedef struct mesh_data_struct {
 
 class Model {
 public:
-	Model(GLenum type, unsigned int level_num = 1):draw_type(type),wrappers(NULL),level_num(level_num){
-		this->data = new MeshData[this->level_num];
-		for (unsigned int i = 0; i < this->level_num; i++) {
+	Model(GLenum type):render_type(type),wrappers(NULL){
+		this->data = new MeshData[this->LEVEL_NUM];
+		for (unsigned int i = 0; i < this->LEVEL_NUM; i++) {
 			this->data[i].meshes = NULL;
 			this->data[i].mesh_num = 0;
 		}
 	}
 	virtual ~Model(){ 
-		for (unsigned int i = 0; i < this->level_num; i++) {
+		for (unsigned int i = 0; i < this->LEVEL_NUM; i++) {
 			delete[] this->data[i].meshes;
 		}
 		delete[] this->data; 
@@ -53,17 +53,15 @@ public:
 	}
 	
 	// load the raw data (vertexs, textures) as well as generate openGL objects.
-	void Load(std::string path, unsigned int level_index = 0);
-
-	Shader shader;
+	void Load(std::string path, unsigned int level_index);
 
 	Wrapper* wrappers;
 	unsigned int wrapper_num;
 protected:
+	static const int LEVEL_NUM = 2;
 	MeshData* data;
-	unsigned int level_num;
 
-	GLenum draw_type;
+	GLenum render_type;
 
 	// load data of mesh contained in the model.
 	void LoadMeshData(Mesh & mesh, aiMesh* raw_mesh, const aiScene* scene, std::string & directory);
@@ -74,19 +72,25 @@ protected:
 
 class StaticModel:public Model {
 public:
-	StaticModel():Model(GL_STATIC_DRAW, 2){}
+	StaticModel():Model(GL_STATIC_DRAW){}
 	~StaticModel(){}
-	virtual void Render(unsigned int level_index, 
+	virtual void Render(const GLfloat model_mat[],
+						const GLfloat projection[],
+						const LightSrc & sun,
+						const Shader & shader) const;
+
+	virtual void RenderDetailly(unsigned int level_index, 
 						const GLfloat model_mat[], 
 						const GLfloat projection_mat[],
 						const LightSrc & sun, 
-						const DepthBuffer & depth_buffer) const;
+						const DepthBuffer & depth_buffer,
+						const Shader & shader) const;
 
-	virtual void RenderFrame(unsigned int level_index, 
+	virtual void RenderNoTexture(unsigned int level_index, 
 							const GLfloat model_mat[], 
 							const GLfloat view_mat[],
 							const GLfloat projection_mat[], 
-							const Shader & frame_shader) const;
+							const Shader & shader) const;
 protected:
 
 };

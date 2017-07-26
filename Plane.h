@@ -6,11 +6,12 @@ class PlaneModel: public Model {
 public:
 	PlaneModel(vec3 origin_position);
 	~PlaneModel(){}
-	void Render(const LightSrc & light, 
-				const DepthBuffer & depth_buffer, 
-				const GLfloat []) const;
+	void RenderDetailly(const GLfloat projection_mat[],
+				const LightSrc & light, 
+				const DepthBuffer & depth_buffer,
+				const Shader & shader) const;
 	
-	void RenderFrame(const GLfloat view_matrix[], 
+	void RenderNoTexture(const GLfloat view_matrix[],
 					const GLfloat projection_matrix[], 
 					const Shader & frame_shader) const;
 

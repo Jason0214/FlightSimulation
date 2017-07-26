@@ -62,9 +62,15 @@ public:
 
 	GLint window_width;
 	GLint window_height;
+
+	Shader detailed_shader;
+	Shader detailed_shader_support_alpha;
+	Shader basic_shader;
+	Shader basic_shader_support_alpha;
+	Shader shadow_map_shader;
 private:
 	void Arrange(const vec3 & camera_front, const vec3 & camera_position);
-	void GenerateShadowMap(const vec3 & light_direction, GLfloat aspect_ratio);
+	void GenerateShadowMap();
 
 	std::vector<Instance*> object_list;
 	std::vector<Instance*> object_grid_map[MAP_SIDE_NUM][MAP_SIDE_NUM];

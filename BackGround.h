@@ -7,16 +7,21 @@ public:
 	BackGround();
 	~BackGround(){}
 	// inheirts from class::StaticModel
-	void Render(const GLfloat projection_matrix[], const LightSrc & light, const DepthBuffer & depth_buffer,
-				unsigned int level_index = 0) const{
-		this->StaticModel::Render(level_index, this->model_mat, projection_matrix, light, depth_buffer);
+	void Render(const GLfloat projection_matrix[], const LightSrc & light, const Shader & shader) const{
+		this->StaticModel::Render(this->model_mat, projection_matrix, light, shader);
 	}
-	// inheirts from class::StaticModel
-	void RenderFrame(const GLfloat view_matrix[], 
+
+	void RenderDetailly(unsigned int level_index, const GLfloat projection_matrix[], const LightSrc & light,
+						const DepthBuffer & depth_buffer, const Shader & shader) {
+		this->StaticModel::RenderDetailly(level_index, this->model_mat, projection_matrix, light, depth_buffer, shader);
+	}
+
+
+	void RenderNoTexture(unsigned int level_index,
+					const GLfloat view_matrix[], 
 					const GLfloat projection_matrix[],
-					const Shader & frame_shader, 
-					unsigned int level_index = 0)const{
-		this->StaticModel::RenderFrame(level_index, this->model_mat, view_matrix, projection_matrix, frame_shader);
+					const Shader & shader)const{
+		this->StaticModel::RenderNoTexture(level_index, this->model_mat, view_matrix, projection_matrix, shader);
 	}
 
 

@@ -46,21 +46,21 @@ void DepthBuffer::BufferWriteConfig(GLfloat aspect_ratio) {
 			frustum_world_position[0].x(),
 			frustum_world_position[0].y(),
 			frustum_world_position[0].y(),
-			frustum_world_position[0].z(),
-			frustum_world_position[0].z(),
+			-frustum_world_position[0].z(),
+			-frustum_world_position[0].z(),
 		};
 		for (int j = 1; j < 8; j++) {
 			if (frustum_world_position[j].x() < ortho_params[0]) ortho_params[0] = frustum_world_position[j].x();
 			if (frustum_world_position[j].x() > ortho_params[1]) ortho_params[1] = frustum_world_position[j].x();
 			if (frustum_world_position[j].y() < ortho_params[2]) ortho_params[2] = frustum_world_position[j].y();
 			if (frustum_world_position[j].y() > ortho_params[3]) ortho_params[3] = frustum_world_position[j].y();
-			if (frustum_world_position[j].z() < ortho_params[4]) ortho_params[4] = frustum_world_position[j].z();
-			if (frustum_world_position[j].z() > ortho_params[5]) ortho_params[5] = frustum_world_position[j].z();
+			if (-frustum_world_position[j].z() < ortho_params[4]) ortho_params[4] = -frustum_world_position[j].z();
+			if (-frustum_world_position[j].z() > ortho_params[5]) ortho_params[5] = -frustum_world_position[j].z();
 		}
 		glMatrixMode(GL_PROJECTION);
 		glPushMatrix();
 		glLoadIdentity();
-		glOrtho(ortho_params[0], ortho_params[1], ortho_params[2], ortho_params[3], -ortho_params[5], -ortho_params[4]);
+		glOrtho(ortho_params[0], ortho_params[1], ortho_params[2], ortho_params[3], ortho_params[4], ortho_params[5]);
 		glGetFloatv(GL_PROJECTION_MATRIX, this->light_space_projection[i]);
 		glPopMatrix();
 	}
@@ -85,8 +85,7 @@ void DepthBuffer::BufferReadConfig(const Shader & shader) const {
 	glUniform1i(glGetUniformLocation(shader.ProgramID, "shadow_map[2]"), 6);
 }
 
-void DepthBuffer::init(std::string vs_path, std::string fs_path, const vec3 & light_dir){
-	this->ShaderInit(vs_path, fs_path);
+void DepthBuffer::init(const vec3 & light_dir){
 	this->LightDirInit(light_dir);
 	for (int i = 0; i < CASCADE_NUM; i++) {
 		// gen texture ID
