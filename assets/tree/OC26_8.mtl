@@ -1,0 +1,225 @@
+newmtl OC26_7:BARK1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_7:BARK3
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26brk2.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_7:CENTRE1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26cnt1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_7:CENTRE3
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26cnt3.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_7:LEAF1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26lef1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_7:LEAF3
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26lef2.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_7:ROOTS1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd OC26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_7:TRUNK1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd OC26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_7:TWIG1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd OC26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_7:TWIG2
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd OC26brk2.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:BARK1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:BARK3
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26brk2.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:CENTRE1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26cnt1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:CENTRE3
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26cnt3.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:LEAF1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26lef1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:LEAF3
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26lef2.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:ROOTS1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd OC26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:TRUNK1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd OC26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:TWIG1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd OC26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_8:TWIG2
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd OC26brk2.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_9:BARK1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_9:LEAF1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26lef1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_9:ROOTS1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_9:TRUNK1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26brk1.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00
+newmtl OC26_9:TWIG2
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.10 0.10 0.10
+Tf 1.00 1.00 1.00
+map_Kd oc26brk2.png
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 2.00

@@ -114,7 +114,7 @@ static void init() {
 		}
 		tree[0]->Load("./assets/tree/OC26_2.obj", 0);
 		tree[0]->LoadWrapper(tree_small_wrapper_path, 2);
-		tree[1]->Load("./assets/tree/OC26_3.obj", 0);
+		tree[1]->Load("./assets/tree/OC26_4.obj", 0);
 		tree[1]->LoadWrapper(tree_small_wrapper_path, 2);
 		tree[2]->Load("./assets/tree/OC26_5.obj", 0);
 		tree[2]->LoadWrapper(tree_small_wrapper_path, 2);
